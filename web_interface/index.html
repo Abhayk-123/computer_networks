@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ITL351 Complete Network Simulator - Unified UI</title>
+<style>
+:root{--bg:#050816;--panel:#0b1530;--panel2:#111f3f;--line:#263a62;--text:#eef6ff;--muted:#aab8d3;--phy:#38bdf8;--dl:#22c55e;--net:#f59e0b;--tr:#a78bfa;--app:#fb7185;--ok:#10b981;--bad:#ef4444;--warn:#f97316;--chip:#071428}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,#1e3a8a,#08111f 36%,#020617);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}.layout{display:grid;grid-template-columns:310px 1fr;min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;background:rgba(2,6,23,.9);border-right:1px solid var(--line);padding:18px}.brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}.logo{width:54px;height:54px;border-radius:18px;background:linear-gradient(135deg,#0ea5e9,#7c3aed,#fb7185);display:grid;place-items:center;font-weight:950;box-shadow:0 0 35px #0ea5e955}.brand h1{font-size:18px;margin:0}.brand p{font-size:12px;color:var(--muted);margin:4px 0 0}.nav{display:grid;gap:9px}.nav button{border:1px solid var(--line);background:linear-gradient(180deg,#112545,#081326);color:var(--text);border-radius:16px;text-align:left;padding:12px;cursor:pointer;font-weight:900}.nav button span{display:block;font-weight:500;color:var(--muted);font-size:11px;margin-top:4px}.nav button.active{border-color:#7dd3fc;box-shadow:0 0 0 2px #7dd3fc28;background:linear-gradient(180deg,#164e63,#0d2138)}.legend{margin-top:18px;padding-top:13px;border-top:1px solid var(--line)}.legend div{display:flex;align-items:center;gap:8px;margin:9px 0;color:var(--muted);font-size:13px}.dot{width:12px;height:12px;border-radius:50%}.main{padding:20px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.top h2{margin:0;font-size:28px}.top p{margin:7px 0 0;color:var(--muted);line-height:1.45}.actions{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#081427;color:var(--text);border-radius:13px;padding:10px 12px;font-weight:850;cursor:pointer}.btn:hover{filter:brightness(1.1)}.btn.primary{border:0;background:linear-gradient(135deg,#0284c7,#7c3aed)}.btn.good{border:0;background:linear-gradient(135deg,#059669,#16a34a)}.btn.warn{border:0;background:linear-gradient(135deg,#f97316,#dc2626)}.grid{display:grid;grid-template-columns:1.12fr .88fr;gap:16px}.card{background:rgba(11,21,48,.94);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 18px 50px #0006}.card h3{margin:0;padding:13px 15px;border-bottom:1px solid var(--line);font-size:15px;display:flex;gap:10px;align-items:center;justify-content:space-between}.subgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}.mini2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.canvas{height:560px;position:relative;overflow:hidden;background:linear-gradient(180deg,#102344cc,#02081744)}.node{position:absolute;width:112px;min-height:76px;border:1px solid #4f6e91;background:linear-gradient(180deg,#162c50,#071426);border-radius:18px;display:grid;place-items:center;text-align:center;padding:7px;box-shadow:0 15px 35px #0006;z-index:3;font-weight:950;font-size:13px}.node small{display:block;color:#b5c4dc;font-weight:500;font-size:10px;line-height:1.25;margin-top:4px}.node.host{border-color:var(--phy)}.node.hub,.node.switch{border-color:var(--dl)}.node.router{border-color:var(--net)}.node.server{border-color:var(--app)}.link{position:absolute;height:3px;background:linear-gradient(90deg,transparent,#7a98bd,transparent);transform-origin:left center;z-index:1}.packet{position:absolute;width:26px;height:26px;border-radius:50%;background:var(--app);box-shadow:0 0 25px var(--app);z-index:10;display:none}.packet:after{content:attr(data-label);position:absolute;left:30px;top:-6px;background:#020617;border:1px solid var(--line);border-radius:9px;color:white;font-size:11px;padding:4px 8px;white-space:nowrap}.tabs{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-bottom:1px solid var(--line)}.tab{border:1px solid var(--line);background:#071427;color:var(--text);border-radius:999px;padding:8px 11px;font-size:12px;cursor:pointer}.tab.active{background:#164e63;border-color:#67e8f9}.logs{height:560px;overflow:auto;background:#020817;padding:12px;font-family:Consolas,monospace;font-size:12px}.log{padding:8px 10px;margin:6px 0;border-radius:12px;background:#071427;border-left:4px solid var(--line);line-height:1.45}.PHY{border-color:var(--phy)}.DL{border-color:var(--dl)}.NET{border-color:var(--net)}.TCP,.UDP,.TR{border-color:var(--tr)}.APP{border-color:var(--app)}.OK{border-color:var(--ok)}.BAD{border-color:var(--bad)}.WARN{border-color:var(--warn)}.controls{padding:13px;display:grid;gap:10px}.controlRow{display:grid;grid-template-columns:1fr 1fr;gap:9px}.controls label{font-size:12px;color:#cbd5e1;font-weight:800}.controls input,.controls select{width:100%;margin-top:5px;background:#061226;border:1px solid var(--line);color:var(--text);border-radius:11px;padding:9px}.pillbar{display:flex;flex-wrap:wrap;gap:8px}.pill{font-size:12px;color:#dbeafe;border:1px solid var(--line);background:#08172a;border-radius:999px;padding:6px 10px}.tableWrap{max-height:315px;overflow:auto}.tbl{width:100%;border-collapse:collapse;font-size:12px}.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.tbl th{background:#08172a;color:#c7d2fe;position:sticky;top:0;z-index:1}.layers{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:13px}.layer{border:1px solid var(--line);border-radius:16px;background:#071427;padding:10px;min-height:112px}.layer b{display:block}.layer p{font-size:12px;color:var(--muted);line-height:1.4;margin:6px 0 0}.layer.active{border-color:#7dd3fc;box-shadow:0 0 0 2px #7dd3fc22}.stepTable tr.done td{background:#0f3b2c}.ascii{white-space:pre;overflow:auto;background:#020817;border:1px solid var(--line);border-radius:18px;padding:13px;font-family:Consolas,monospace;color:#c7eaff;line-height:1.35;min-height:250px}.smallNote{padding:10px 13px;color:var(--muted);font-size:12px;border-top:1px solid var(--line)}@media(max-width:1150px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.grid,.subgrid,.mini2{grid-template-columns:1fr}.layers{grid-template-columns:1fr}.top{display:block}.actions{margin-top:12px}.canvas{height:620px}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">CN</div><div><h1>ITL351 Simulator</h1><p>One UI • 3 Sections • Full protocol stack</p></div></div>
+  <div class="nav">
+    <button class="active" onclick="selectSection('all',this)">Complete Unified Simulator<span>Section 1 + Section 2 + Section 3 together</span></button>
+    <button onclick="selectSection('s1',this)">Section 1<span>Physical + Data Link scenario</span></button>
+    <button onclick="selectSection('s2',this)">Section 2<span>Network layer, routing, ARP, RIP</span></button>
+    <button onclick="selectSection('s3',this)">Section 3<span>Transport + Application services</span></button>
+    <button onclick="selectSection('tables',this)">All Tables View<span>Layer, MAC, ARP, routing, protocols</span></button>
+  </div>
+  <div class="legend">
+    <div><span class="dot" style="background:var(--phy)"></span>Physical: signals, hubs, line coding</div>
+    <div><span class="dot" style="background:var(--dl)"></span>Data Link: MAC, CRC, CSMA/CD</div>
+    <div><span class="dot" style="background:var(--net)"></span>Network: IP, ARP, routing, RIP</div>
+    <div><span class="dot" style="background:var(--tr)"></span>Transport: TCP, UDP, ports</div>
+    <div><span class="dot" style="background:var(--app)"></span>Application: HTTP, FTP, DNS</div>
+  </div>
+</aside>
+<main class="main">
+  <section class="top">
+    <div><h2 id="title">Complete Network Simulator Interface</h2><p id="desc">Add devices manually, auto/manual assign IP, run quick scenarios, send packets, and watch each layer update its own table.</p></div>
+    <div class="actions"><button class="btn primary" onclick="sendPacket()">▶ Send Packet</button><button class="btn good" onclick="runQuickScenario()">⚡ Quick Scenario</button><button class="btn" onclick="resetLogs()">Clear Logs</button><button class="btn" onclick="resetTopology()">Reset Topology</button></div>
+  </section>
+
+  <section class="grid">
+    <div class="card"><h3><span>Visual Topology Builder + Packet Animation</span><span class="pillbar" id="statusPills"></span></h3><div class="canvas" id="canvas"><div class="packet" id="packet" data-label="APP"></div></div></div>
+    <div class="card"><h3>Controls + Quick Scenarios</h3><div class="tabs" id="scenarioTabs"></div><div class="controls">
+      <div class="controlRow"><div><label>Device Type<select id="deviceType"><option>Host</option><option>Server</option><option>Hub</option><option>Switch</option><option>Router</option></select></label></div><div><label>Device Name<input id="deviceName" placeholder="Example: PC6"></label></div></div>
+      <div class="controlRow"><div><label>IP Mode<select id="ipMode"><option value="auto">Auto Assign IP</option><option value="manual">Manual IP</option></select></label></div><div><label>Manual IP / CIDR<input id="manualIp" placeholder="192.168.1.50/24"></label></div></div>
+      <div class="actions"><button class="btn good" onclick="addDeviceFromForm()">+ Add Device</button><button class="btn" onclick="autoConnectSelected()">Auto Connect</button><button class="btn" onclick="assignAutoIPs()">Auto Assign IPs</button></div>
+      <div class="controlRow"><div><label>Source<select id="srcSelect"></select></label></div><div><label>Destination<select id="dstSelect"></select></label></div></div>
+      <div class="controlRow"><div><label>Application<select id="appSelect"><option>HTTP</option><option>FTP</option><option>DNS</option><option>SSH</option><option>UDP Message</option></select></label></div><div><label>Payload<input id="payload" value="GET /index.html HTTP/1.1"></label></div></div>
+      <div class="actions"><button class="btn primary" onclick="sendPacket()">Send Selected Packet</button><button class="btn warn" onclick="simulateError()">Inject CRC Error</button><button class="btn warn" onclick="simulateCollision()">Simulate Collision</button></div>
+      <div class="pillbar"><span class="pill">Manual topology supported</span><span class="pill">Auto + manual IP</span><span class="pill">Tables update live</span><span class="pill">All protocols shown</span></div>
+    </div></div>
+  </section>
+
+  <section class="mini2">
+    <div class="card"><h3>Layer Details Table — Complete Stack</h3><div class="layers" id="layerCards"></div><div class="tableWrap"><table class="tbl" id="layerTable"></table></div></div>
+    <div class="card"><h3>Live Working Logs</h3><div class="logs" id="logs"></div></div>
+  </section>
+
+  <section class="subgrid">
+    <div class="card"><h3>MAC / CAM Table</h3><div class="tableWrap"><table class="tbl" id="macTable"></table></div></div>
+    <div class="card"><h3>ARP Table</h3><div class="tableWrap"><table class="tbl" id="arpTable"></table></div></div>
+    <div class="card"><h3>Routing Table</h3><div class="tableWrap"><table class="tbl" id="routingTable"></table></div></div>
+  </section>
+
+  <section class="subgrid">
+    <div class="card"><h3>Error Control + Access Control</h3><div class="tableWrap"><table class="tbl" id="controlTable"></table></div></div>
+    <div class="card"><h3>Dynamic Protocols</h3><div class="tableWrap"><table class="tbl" id="protocolTable"></table></div></div>
+    <div class="card"><h3>Per-Packet Individual Work Table</h3><div class="tableWrap"><table class="tbl stepTable" id="packetWorkTable"></table></div></div>
+  </section>
+
+  <section class="grid" style="margin-top:16px">
+    <div class="card"><h3>Topology Quick Scenario / ASCII View</h3><div style="padding:14px"><div class="ascii" id="ascii"></div></div><div class="smallNote">Quick scenarios automatically assign IPs. You can still override IP manually from the device form.</div></div>
+    <div class="card"><h3>Encapsulation / Decapsulation View</h3><div class="tableWrap"><table class="tbl" id="encapTable"></table></div></div>
+  </section>
+</main>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let activeSection='all';
+let scenario='Full Stack HTTP';
+let logs=[];let animBusy=false;
+let devices=[],links=[],macRows=[],arpRows=[],routeRows=[],workRows=[];
+let seq=6;
+const colors={PHY:'var(--phy)',DL:'var(--dl)',NET:'var(--net)',TCP:'var(--tr)',UDP:'var(--tr)',APP:'var(--app)',OK:'var(--ok)',BAD:'var(--bad)',WARN:'var(--warn)'};
+const scenarios={
+ all:['Full Stack HTTP','10 Device Network','Manual Builder Demo','RIP Dynamic Routing','Error + Access Control'],
+ s1:['Star Hub','Switch Learning','CRC Error','CSMA/CD Collision','Go-Back-N'],
+ s2:['ARP + Static Route','RIP Dynamic Routing','Longest Prefix Match','TTL Drop','VLSM IP Assignment'],
+ s3:['TCP HTTP','UDP DNS','FTP Commands','Port Multiplexing','Sliding Window'],
+ tables:['Refresh All Tables','Full Stack HTTP','10 Device Network']
+};
+const layerData=[
+ ['Physical','Bits','End device, hub, star topology, line coding, signal transmit/receive','NRZ / Manchester encoded bits'],
+ ['Data Link','Frame','MAC addressing, switch/bridge, CRC, CSMA/CD, sliding window','Dest MAC, Source MAC, Type, Payload, FCS'],
+ ['Network','Packet','IPv4 CIDR, ARP, static routing, RIP, TTL, longest prefix match','Src IP, Dest IP, TTL, Protocol, Payload'],
+ ['Transport','Segment/Datagram','Ports, sockets, TCP handshake, UDP, flow control, retransmission','Src Port, Dest Port, Seq, Ack, Flags, Window'],
+ ['Application','Data','HTTP, FTP, DNS, SSH/Telnet simulated services','Request/response command data']
+];
+function boot(){loadFullStack();renderAll();selectSection('all',document.querySelector('.nav button'));}
+function selectSection(sec,btn){activeSection=sec;document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');
+ const titles={all:['Complete Unified Simulator','Ek hi UI me Section 1, Section 2 aur Section 3 ka complete simulator.'],s1:['Section 1 Simulator','Physical + Data Link: hub, switch, MAC, CRC, CSMA/CD, Go-Back-N.'],s2:['Section 2 Simulator','Network: CIDR, ARP, static routing, RIP dynamic routing, LPM, TTL.'],s3:['Section 3 Simulator','Transport + Application: TCP, UDP, ports, HTTP, FTP, DNS.'],tables:['All Tables View','All layer details, MAC/CAM, ARP, routing, protocol and packet work tables.']};
+ $('title').textContent=titles[sec][0];$('desc').textContent=titles[sec][1];scenario=scenarios[sec][0];drawScenarioTabs();renderAll();}
+function drawScenarioTabs(){ $('scenarioTabs').innerHTML=scenarios[activeSection].map(x=>`<button class="tab ${x===scenario?'active':''}" onclick="scenario='${x}';drawScenarioTabs();runQuickScenario()">${x}</button>`).join(''); }
+function mac(i){return 'AA:BB:CC:DD:EE:'+String(i).padStart(2,'0')}
+function newDevice(name,type,ip,x,y){devices.push({id:name,name,type,ip:ip||'',mac:mac(devices.length+1),x,y});}
+function loadFullStack(){devices=[];links=[];macRows=[];arpRows=[];routeRows=[];workRows=[];seq=6;
+ newDevice('HostA','Host','192.168.1.2/24',7,42);newDevice('Switch1','Switch','',27,42);newDevice('Router1','Router','192.168.1.1/24 | 192.168.2.1/24',50,42);newDevice('Switch2','Switch','',70,42);newDevice('HostB','Server','192.168.2.2/24',88,42);
+ links=[['HostA','Switch1'],['Switch1','Router1'],['Router1','Switch2'],['Switch2','HostB']];
+ seedTables();}
+function load10Device(){devices=[];links=[];macRows=[];arpRows=[];routeRows=[];workRows=[];seq=11;newDevice('HubA','Hub','',20,28);newDevice('SwitchCore','Switch','',50,45);newDevice('HubB','Hub','',80,28);
+ for(let i=1;i<=5;i++){newDevice('A-PC'+i,'Host','192.168.10.'+(i+1)+'/24',6+i*7,70);links.push(['A-PC'+i,'HubA']);}
+ for(let i=1;i<=5;i++){newDevice('B-PC'+i,'Host','192.168.20.'+(i+1)+'/24',58+i*7,70);links.push(['B-PC'+i,'HubB']);}
+ links.push(['HubA','SwitchCore'],['SwitchCore','HubB']);seedTables();}
+function seedTables(){macRows=[];arpRows=[];routeRows=[];
+ devices.filter(d=>d.mac).forEach((d,i)=>macRows.push(['Switch1/Core',d.mac,'Port '+(i+1),d.name,'Learned']));
+ devices.filter(d=>d.ip&&d.type!=='Switch'&&d.type!=='Hub').forEach(d=>arpRows.push([d.name,d.ip.split('/')[0],d.mac,'Dynamic']));
+ routeRows.push(['Router1','192.168.1.0/24','255.255.255.0','Direct','G0/0','0']);
+ routeRows.push(['Router1','192.168.2.0/24','255.255.255.0','Direct','G0/1','0']);
+ routeRows.push(['Router1','0.0.0.0/0','0.0.0.0','10.0.0.2','S0/0','1']);}
+function renderAll(){drawTopology();drawSelects();drawTables();drawLayerCards();drawAscii();drawPills();}
+function drawPills(){let hosts=devices.filter(d=>['Host','Server'].includes(d.type)).length;$('statusPills').innerHTML=`<span class="pill">Devices: ${devices.length}</span><span class="pill">Links: ${links.length}</span><span class="pill">Hosts: ${hosts}</span><span class="pill">Scenario: ${scenario}</span>`}
+function drawTopology(){const c=$('canvas');c.querySelectorAll('.node,.link').forEach(e=>e.remove());
+ links.forEach(([a,b])=>{let A=devices.find(d=>d.id===a),B=devices.find(d=>d.id===b);if(!A||!B)return;let x1=A.x/100*c.clientWidth+56,y1=A.y/100*c.clientHeight+38,x2=B.x/100*c.clientWidth+56,y2=B.y/100*c.clientHeight+38;let dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);let line=document.createElement('div');line.className='link';line.style.left=x1+'px';line.style.top=y1+'px';line.style.width=len+'px';line.style.transform=`rotate(${Math.atan2(dy,dx)}rad)`;c.appendChild(line);});
+ devices.forEach(d=>{let div=document.createElement('div');div.className='node '+d.type.toLowerCase();div.id='node_'+d.id;div.style.left=d.x+'%';div.style.top=d.y+'%';div.innerHTML=`${icon(d.type)} ${d.name}<small>${d.type}<br>${d.ip||'No IP'}<br>${d.mac||''}</small>`;c.appendChild(div);});}
+function icon(t){return t==='Router'?'🛜':t==='Switch'?'🔀':t==='Hub'?'📡':t==='Server'?'🖥️':'💻'}
+function drawSelects(){let opts=devices.filter(d=>['Host','Server','Router'].includes(d.type)).map(d=>`<option>${d.name}</option>`).join('');$('srcSelect').innerHTML=opts;$('dstSelect').innerHTML=opts.replace('HostA','HostB');}
+function drawLayerCards(){const map=[['PHY','Physical Layer','Signal, topology, encoding'],['DL','Data Link','Frame, MAC, CRC, access control'],['NET','Network','IP, ARP, routing, TTL'],['TCP','Transport','TCP/UDP, ports, window'],['APP','Application','HTTP, FTP, DNS services']];$('layerCards').innerHTML=map.map(m=>`<div class="layer" id="layer_${m[0]}"><b>${m[1]}</b><p>${m[2]}</p></div>`).join('')}
+function table(head,rows){return '<thead><tr>'+head.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(x=>`<td>${x}</td>`).join('')+'</tr>').join('')+'</tbody>'}
+function drawTables(){
+ $('layerTable').innerHTML=table(['Layer','PDU','Main Work','Header / Output'],layerData);
+ $('macTable').innerHTML=table(['Device','MAC Address','Port','Owner','Status'],macRows);
+ $('arpTable').innerHTML=table(['Device','IP Address','MAC Address','Type'],arpRows);
+ $('routingTable').innerHTML=table(['Router','Network','Subnet Mask','Next Hop','Interface','Metric'],routeRows);
+ $('controlTable').innerHTML=table(['Mechanism','Layer','What it does','Current Result'],[
+ ['CRC / FCS','Data Link','Detects corrupted frame by recomputing checksum','Ready'],['CSMA/CD','Data Link','Detects collision on shared medium, backs off and retransmits','Ready'],['Go-Back-N','Data Link / TCP','Retransmits from missing frame onward','Window size 4'],['Selective Repeat','Data Link / TCP','Retransmits only missing frame','Compared in logs'],['TTL','Network','Drops packet when TTL becomes zero','TTL starts 64']]);
+ $('protocolTable').innerHTML=table(['Protocol','Type','Metric / Port','Simulator Output'],[
+ ['RIP','Dynamic Routing','Hop count, max 15','Distance vector rounds + convergence'],['Static Routing','Manual Routing','Admin configured','Routing lookup table shown'],['ARP','Resolution','IP → MAC','ARP request/reply + cache table'],['HTTP','Application','TCP 80','GET and 200 OK response'],['FTP','Application','TCP 21','LIST, STOR, RETR, QUIT'],['DNS','Application','UDP/TCP 53','Domain to IP response']]);
+ $('packetWorkTable').innerHTML=table(['Step','Layer','Input','Work Done','Output / Table Update'],workRows.length?workRows:[['-','-','No packet sent yet','Click Send Packet','Tables will update live']]);
+ $('encapTable').innerHTML=table(['Direction','Layer','Encapsulation / Decapsulation'],[
+ ['Send','APP','Create request data: HTTP GET / FTP LIST / DNS query'],['Send','TCP/UDP','Add source/destination ports, seq/ack/window/checksum'],['Send','NET','Add source IP, destination IP, TTL, protocol; route lookup'],['Send','DL','Add source MAC, destination MAC, frame type and CRC/FCS'],['Send','PHY','Convert frame to bits using NRZ/Manchester line coding'],['Receive','PHY → APP','Decode bits, verify frame, remove IP/TCP headers, deliver to app']]);}
+function drawAscii(){let lines=['CURRENT TOPOLOGY',''];links.forEach(l=>lines.push(`${l[0]}  ----  ${l[1]}`));lines.push('');lines.push('Layer path: APP → TCP/UDP → IP → Frame → Bits → Frame → IP → TCP/UDP → APP');lines.push('Tables updated: MAC/CAM, ARP, Routing, Error/Access Control, Per-packet Work');$('ascii').textContent=lines.join('\n')}
+function addLog(type,msg){let div=document.createElement('div');div.className='log '+type;div.textContent=`[${type}]  ${msg}`;$('logs').appendChild(div);$('logs').scrollTop=999999;logs.push(`[${type}] ${msg}`);document.querySelectorAll('.layer').forEach(x=>x.classList.remove('active'));let id=type==='UDP'?'TCP':type;if($('layer_'+id))$('layer_'+id).classList.add('active')}
+function resetLogs(){$('logs').innerHTML='';logs=[];workRows=[];drawTables();}
+function resetTopology(){loadFullStack();resetLogs();renderAll();addLog('OK','Topology reset to full stack HostA → Switch1 → Router1 → Switch2 → HostB.');}
+function addDeviceFromForm(){let type=$('deviceType').value;let name=$('deviceName').value.trim()||type+seq++;let ip='';if(['Host','Server','Router'].includes(type)){ip=$('ipMode').value==='manual'&&$('manualIp').value.trim()?$('manualIp').value.trim():nextAutoIP(type);}newDevice(name,type,ip,10+(devices.length*13)%75,18+(devices.length*17)%65);addLog('OK',`${type} ${name} added with ${ip||'no IP required'}.`);seedTables();renderAll();}
+function nextAutoIP(type){let count=devices.filter(d=>d.type===type||d.type==='Host'||d.type==='Server').length+2;return type==='Router'?`192.168.${count}.1/24`:`192.168.1.${count}/24`}
+function assignAutoIPs(){devices.forEach((d,i)=>{if(['Host','Server'].includes(d.type))d.ip=`192.168.1.${i+2}/24`;if(d.type==='Router')d.ip='192.168.1.1/24 | 192.168.2.1/24'});seedTables();renderAll();addLog('NET','Auto IP assignment completed for all hosts and routers.');}
+function autoConnectSelected(){if(devices.length<2)return;let a=devices[devices.length-2].name,b=devices[devices.length-1].name;links.push([a,b]);renderAll();addLog('PHY',`Manual topology link added: ${a} ---- ${b}.`)}
+function runQuickScenario(){resetLogs(); if(['Full Stack HTTP','Refresh All Tables'].includes(scenario)){loadFullStack();renderAll();sendPacket();return} if(scenario==='10 Device Network'){load10Device();renderAll();addLog('PHY','Quick scenario created: two 5-device star topologies connected through a switch.');addLog('DL','Broadcast domains: 1 with switch VLAN default; collision domains separated by switch ports and hub segments.');return} if(scenario==='Manual Builder Demo'){addLog('OK','Use Add Device, Auto Connect, Auto Assign IP and Send Packet to build manually.');return} if(scenario==='Error + Access Control'||scenario==='CRC Error'){simulateError();return} if(scenario==='CSMA/CD Collision'){simulateCollision();return} if(scenario==='RIP Dynamic Routing'){runRIP();return} if(scenario==='Longest Prefix Match'){runLPM();return} if(scenario==='TTL Drop'){runTTL();return} if(scenario==='VLSM IP Assignment'){assignAutoIPs();addLog('NET','VLSM/CIDR example ready: /24 LANs can be changed manually to /25, /26, /30 in IP field.');return} if(scenario==='Switch Learning'||scenario==='Star Hub'||scenario==='Go-Back-N'){runSection1Scenario();return} if(['ARP + Static Route'].includes(scenario)){sendPacket();return} if(['TCP HTTP','UDP DNS','FTP Commands','Port Multiplexing','Sliding Window'].includes(scenario)){runSection3Scenario();return} sendPacket();}
+function nodeCenter(name){let d=devices.find(x=>x.name===name||x.id===name);let c=$('canvas');if(!d)return{x:50,y:50};return{x:d.x/100*c.clientWidth+56,y:d.y/100*c.clientHeight+38}}
+function animatePath(path,labels,cb){let p=$('packet');let i=0;animBusy=true;function step(){if(i>=path.length-1){p.style.display='none';animBusy=false;cb&&cb();return}let A=nodeCenter(path[i]),B=nodeCenter(path[i+1]),start=null;p.dataset.label=labels[i]||'PKT';p.style.background=colors[labels[i]]||colors.APP;p.style.boxShadow=`0 0 25px ${colors[labels[i]]||colors.APP}`;p.style.display='block';function frame(ts){if(!start)start=ts;let t=Math.min((ts-start)/700,1);p.style.left=(A.x+(B.x-A.x)*t-13)+'px';p.style.top=(A.y+(B.y-A.y)*t-13)+'px';if(t<1)requestAnimationFrame(frame);else{i++;setTimeout(step,150)}}requestAnimationFrame(frame)}step()}
+function sendPacket(){if(animBusy)return;resetLogs();let src=$('srcSelect').value||'HostA',dst=$('dstSelect').value||'HostB',app=$('appSelect').value,payload=$('payload').value||'Hello';let sDev=devices.find(d=>d.name===src)||devices[0],dDev=devices.find(d=>d.name===dst)||devices[devices.length-1];
+ let dstPort={HTTP:80,FTP:21,DNS:53,SSH:22,'UDP Message':5002}[app]||80,srcPort=52000+Math.floor(Math.random()*900);
+ workRows=[['1','Application',payload,`${app} request created`,`Application data ready`],['2','Transport',`App data`,app==='UDP Message'||app==='DNS'?`UDP datagram with src port ${srcPort}, dst port ${dstPort}`:`TCP handshake SYN/SYN-ACK/ACK then segment`,`Socket ${sDev.ip.split('/')[0]}:${srcPort} → ${dDev.ip.split('/')[0]}:${dstPort}`],['3','Network','Transport segment','DNS/ARP resolution, IP packet creation, routing lookup, TTL=64','ARP + Routing tables updated'],['4','Data Link','IP packet','Ethernet frame created, source/destination MAC added, CRC calculated','MAC/CAM table learned source port'],['5','Physical','Frame','Frame encoded into bits and transmitted','Signal sent and received'],['6','Receiver','Bits','Decapsulation PHY → DL → NET → TCP → APP',`${app} response delivered`]];
+ macRows.unshift(['Switch1/Core',sDev.mac,'Dynamic Port',sDev.name,'Updated by frame source']);arpRows.unshift([sDev.name,dDev.ip.split('/')[0],dDev.mac,'Resolved before first packet']);drawTables();
+ addLog('APP',`${app} request created at ${src}. Payload: ${payload}`);setTimeout(()=>addLog(app==='DNS'||app==='UDP Message'?'UDP':'TCP',`${app==='DNS'||app==='UDP Message'?'UDP datagram':'TCP SYN → SYN-ACK → ACK'} using ${srcPort} → ${dstPort}.`),350);setTimeout(()=>addLog('NET',`ARP resolves ${dDev.ip.split('/')[0]} to ${dDev.mac}. Routing table lookup selects next hop.`),700);setTimeout(()=>addLog('DL',`Frame created: DST=${dDev.mac}, SRC=${sDev.mac}, FCS=0xA3F2. Switch learns source MAC.`),1050);setTimeout(()=>addLog('PHY','Encoded bits transmitted: 01001000 01010100 01010100 01010000 ...'),1400);
+ let path=findSimplePath(src,dst);if(path.length<2)path=[devices[0].name,devices[devices.length-1].name];animatePath(path,['APP','TCP','NET','DL','PHY'],()=>{addLog('APP',`${dst} received and decapsulated data. Response generated successfully.`);addLog('OK','Individual table shows what every layer did for this packet.');});}
+function findSimplePath(src,dst){let q=[[src]],seen=new Set([src]);while(q.length){let p=q.shift(),last=p[p.length-1];if(last===dst)return p;links.forEach(([a,b])=>{let n=a===last?b:b===last?a:null;if(n&&!seen.has(n)){seen.add(n);q.push([...p,n])}})}return[]}
+function simulateError(){resetLogs();workRows=[['1','DL','Frame payload','CRC calculated at sender','FCS=0xA3F2'],['2','Channel','Frame bits','One bit intentionally flipped','Corrupted frame'],['3','DL Receiver','Received frame','CRC recomputed and compared','Mismatch found'],['4','DL Receiver','Bad frame','Frame dropped and NAK generated','Retransmission required']];drawTables();addLog('DL','Error Control: CRC/FCS generated for outgoing frame.');addLog('WARN','Injected corrupted bit in frame payload.');addLog('BAD','Receiver CRC check failed. Frame dropped.');addLog('DL','Go-Back-N retransmission starts from lost/corrupted frame.');}
+function simulateCollision(){resetLogs();workRows=[['1','DL','Shared hub medium','PC1 and PC2 sense channel','Both detect idle'],['2','DL','Two signals','Both transmit at same time','Collision occurs'],['3','DL','Jam signal','CSMA/CD collision detection','Backoff timer chosen'],['4','DL','Retransmission','Device waits random time','Frame sent again']];drawTables();addLog('DL','Access Control: CSMA/CD checks shared medium.');addLog('WARN','Collision detected on hub segment. Jam signal sent.');addLog('DL','Random backoff applied; frame retransmitted successfully.');}
+function runRIP(){resetLogs();routeRows.push(['Router2','192.168.3.0/24','255.255.255.0','Router3','S0/1','1']);routeRows.push(['Router1','192.168.3.0/24','255.255.255.0','Router2','S0/0','2']);drawTables();addLog('NET','RIP Round 1: routers exchange distance vectors.');addLog('NET','Bellman-Ford: new metric = neighbor metric + 1. Hop count max = 15.');addLog('NET','RIP Round 2: routes converge. Final routing table updated.');}
+function runLPM(){resetLogs();routeRows.unshift(['Router1','192.168.2.128/25','255.255.255.128','10.0.12.2','S0/0','1']);drawTables();addLog('NET','Destination 192.168.2.130 matches 192.168.2.0/24 and 192.168.2.128/25.');addLog('NET','Longest Prefix Match selects /25 because it is most specific.');}
+function runTTL(){resetLogs();addLog('NET','Packet TTL starts at 1.');addLog('NET','Router decrements TTL 1 → 0.');addLog('BAD','Packet dropped because TTL is zero.');}
+function runSection1Scenario(){resetLogs();addLog('PHY','Star topology/hub/switch scenario started.');addLog('DL','Switch learns source MAC address and updates CAM table.');addLog('DL','Go-Back-N window size 4: frame 2 lost, retransmit 2,3,4,5.');simulateCollision();}
+function runSection3Scenario(){resetLogs();let sc=scenario;if(sc==='UDP DNS'){$('appSelect').value='DNS'}if(sc==='FTP Commands'){$('appSelect').value='FTP';$('payload').value='LIST'}if(sc==='TCP HTTP'){$('appSelect').value='HTTP'}sendPacket();if(sc==='Sliding Window'){setTimeout(()=>{addLog('TCP','Sliding Window: segments 1-4 sent, segment 5 lost, timeout, retransmission.');},1800)}if(sc==='Port Multiplexing'){setTimeout(()=>{addLog('TCP','Process A uses port 5001 and Process B uses port 5002 simultaneously on same host.');},1800)}}
+boot();
+</script>
+</body>
+</html>

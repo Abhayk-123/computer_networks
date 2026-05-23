@@ -1,0 +1,78 @@
+HOW TO RUN IN VS CODE
+=====================
+
+STEP 1 — Open in VS Code
+-------------------------
+1. Unzip the project folder
+2. VS Code → File → Open Folder → select "network-simulator"
+
+STEP 2 — Install Python packages
+----------------------------------
+Open Terminal (Ctrl+`) and run:
+
+    cd backend
+    pip install fastapi uvicorn pydantic
+
+STEP 3 — Run the Backend
+--------------------------
+    py -m uvicorn main:app --reload --port 8000
+
+You will see:
+    INFO: Uvicorn running on http://127.0.0.1:8000
+
+STEP 4 — Open the Frontend
+----------------------------
+Option A (Recommended):
+  Install "Live Server" extension → right-click frontend/index.html → Open with Live Server
+
+Option B (Simple):
+  Double-click frontend/index.html — opens directly in browser.
+  The simulator runs fully in the browser without the backend.
+
+STEP 5 — Test API (optional)
+------------------------------
+http://127.0.0.1:8000/docs   ← Swagger UI for all endpoints
+
+
+WHAT WAS FIXED
+==============
+1. HUB BROADCAST (Bug Fixed)
+   - PC1 sends to Hub → Hub now delivers to ALL other PCs (PC2–PC5)
+   - Delivery table shown in Protocols panel per PC
+   - Dest MAC correctly set to FF:FF:FF:FF:FF:FF (broadcast)
+
+2. SWITCH — BIDIRECTIONAL → UNIDIRECTIONAL (Bug Fixed)
+   - On connect(), both endpoint MACs are pre-registered in the switch
+     MAC table (bidirectional awareness at link-up time)
+   - First real frame already finds dest MAC → unicast forwarding
+     (unidirectional: only the target port receives the frame)
+
+3. ALL THREE ARQ FLOW CONTROL PROTOCOLS ADDED
+   ┌─────────────────────┬────────┬────────────────────────────────────┐
+   │ Protocol            │ Window │ Retransmit behaviour               │
+   ├─────────────────────┼────────┼────────────────────────────────────┤
+   │ Stop-and-Wait ARQ   │ W = 1  │ Retransmit same frame on timeout   │
+   │ Go-Back-N ARQ       │ W = N  │ Retransmit from error frame onward │
+   │ Selective Repeat ARQ│ W = N  │ Retransmit ONLY the lost frame     │
+   └─────────────────────┴────────┴────────────────────────────────────┘
+   - All three run automatically when you Send a Frame
+   - Tabs in the Protocols panel switch between them
+   - Standalone comparison: sidebar → "All Three (compare)" → Run Protocol
+
+NEW API ENDPOINTS
+=================
+POST /protocol/stop-and-wait    → Stop-and-Wait ARQ simulation
+POST /protocol/go-back-n        → Go-Back-N ARQ simulation
+POST /protocol/selective-repeat → Selective Repeat ARQ simulation
+POST /protocol/all-arq          → All three side-by-side
+
+FOLDER STRUCTURE
+================
+network-simulator/
+├── backend/
+│   ├── main.py        ← FastAPI server
+│   ├── devices.py     ← EndDevice, Hub, Switch, Bridge
+│   ├── engine.py      ← SimulationEngine
+│   └── protocols.py   ← CRC, CSMA/CD, StopAndWait, GoBackN, SelectiveRepeat
+└── frontend/
+    └── index.html     ← Full simulator UI (open in browser)

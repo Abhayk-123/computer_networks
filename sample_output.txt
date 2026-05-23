@@ -1,0 +1,328 @@
+
+============================================================================================
+SUBMISSION 1 + 2: PHYSICAL LAYER TESTS
+============================================================================================
+[PHY  ] Input data: Hello
+[PHY  ] NRZ       : 01001000 01100101 01101100 01101100 01101111
+[PHY  ] Manchester: 01 10 01 01 10 01 01 01 01 10 10 01 01 10 01 10 01 10 10 01 10 10 01 01 01 10 10 01 10 10 01 01 01 10 10 01 10 10 10 10
+[PHY  ] PC1 <---- P2P-Link ----> PC2
+[PHY  ] PC1: Signal sent using NRZ bits: 01001000 01101001 00100000 01010000 01000011 00110010
+[PHY  ] P2P-Link: carrying signal PC1 -> PC2
+[PHY  ] PC2: Signal received from PC1; bits decoded: 01001000 01101001 00100000 01010000 01000011 00110010
+[PHY  ] Star Topology: PC1
+          \  |  /
+            [Hub1]
+[PHY  ] Star Topology: PC1  PC2
+          \  |  /
+            [Hub1]
+[PHY  ] Star Topology: PC1  PC2  PC3
+          \  |  /
+            [Hub1]
+[PHY  ] Star Topology: PC1  PC2  PC3  PC4
+          \  |  /
+            [Hub1]
+[PHY  ] Star Topology: PC1  PC2  PC3  PC4  PC5
+          \  |  /
+            [Hub1]
+[PHY  ] PC1: Signal sent using NRZ bits: 01000010 01110010 01101111 01100001 01100100 01100011 01100001 01110011 01110100 00100000 01110100 01101000 01110010 011
+[PHY  ] Hub1: Hub broadcasting signal from PC1 to all ports
+[PHY  ] PC2: Signal received from PC1; bits decoded: 01000010 01110010 01101111 01100001 01100100 01100011 01100001 01110011 01110100 00100000 01110100 01101000 01110010 011
+[PHY  ] PC3: Signal received from PC1; bits decoded: 01000010 01110010 01101111 01100001 01100100 01100011 01100001 01110011 01110100 00100000 01110100 01101000 01110010 011
+[PHY  ] PC4: Signal received from PC1; bits decoded: 01000010 01110010 01101111 01100001 01100100 01100011 01100001 01110011 01110100 00100000 01110100 01101000 01110010 011
+[PHY  ] PC5: Signal received from PC1; bits decoded: 01000010 01110010 01101111 01100001 01100100 01100011 01100001 01110011 01110100 00100000 01110100 01101000 01110010 011
+[PHY  ] Only destination PC4 accepts. Others discard at upper layer.
+
+============================================================================================
+SUBMISSION 1 + 2: DATA LINK LAYER TESTS
+============================================================================================
+[DL   ] Switch1: SW-PC1 connected on port 1
+[DL   ] Switch1: SW-PC2 connected on port 2
+[DL   ] Switch1: SW-PC3 connected on port 3
+[DL   ] Switch1: SW-PC4 connected on port 4
+[DL   ] Switch1: SW-PC5 connected on port 5
+[DL   ] SW-PC1: Frame created [DST:AA:BB:CC:DD:EE:04 | SRC:AA:BB:CC:DD:EE:01 | TYPE:IPv4 | FCS:0x0B8F | Data:First message to learn MAC]
+[DL   ] Switch1: Learned MAC AA:BB:CC:DD:EE:01 on port 1
+[DL   ] Switch1: Unknown/broadcast destination; flooding to ports [2, 3, 4, 5]
+[DL   ] Switch1 CAM Table: {'AA:BB:CC:DD:EE:01': 1}
+[DL   ] SW-PC2: Frame not for this MAC. Discarded.
+[DL   ] SW-PC3: Frame not for this MAC. Discarded.
+[DL   ] SW-PC4: Frame accepted after CRC check: [DST:AA:BB:CC:DD:EE:04 | SRC:AA:BB:CC:DD:EE:01 | TYPE:IPv4 | FCS:0x0B8F | Data:First message to learn MAC]
+[DL   ] SW-PC5: Frame not for this MAC. Discarded.
+[DL   ] SW-PC4: Frame created [DST:AA:BB:CC:DD:EE:01 | SRC:AA:BB:CC:DD:EE:04 | TYPE:IPv4 | FCS:0x8DC9 | Data:Reply: now switch can unicast]
+[DL   ] Switch1: Learned MAC AA:BB:CC:DD:EE:04 on port 4
+[DL   ] Switch1: Unicast forwarding to port 1
+[DL   ] Switch1 CAM Table: {'AA:BB:CC:DD:EE:01': 1, 'AA:BB:CC:DD:EE:04': 4}
+[DL   ] SW-PC1: Frame accepted after CRC check: [DST:AA:BB:CC:DD:EE:01 | SRC:AA:BB:CC:DD:EE:04 | TYPE:IPv4 | FCS:0x8DC9 | Data:Reply: now switch can unicast]
+[DL   ] Domains in switch topology: {'broadcast_domains': 1, 'collision_domains': 5}
+[DL   ] SW-PC1: Frame created [DST:AA:BB:CC:DD:EE:02 | SRC:AA:BB:CC:DD:EE:01 | TYPE:IPv4 | FCS:0x16DD | Data:Important payload]
+[DL   ] SW-PC2: CRC ERROR. Frame dropped. [DST:AA:BB:CC:DD:EE:02 | SRC:AA:BB:CC:DD:EE:01 | TYPE:IPv4 | FCS:0x16DD | Data:Important payload [CORRUPTED]]
+[DL   ] CSMA/CD: Carrier sensing started
+[DL   ] Collision detected between ['SW-PC1', 'SW-PC2']. Sending jam signal, backing off, retransmitting.
+[DL   ] SW-PC1 retransmits successfully after random backoff
+[DL   ] Go-Back-N Window [1-4] sending frames [1, 2, 3, 4]
+[DL   ] ACK 1 received; window can slide
+[DL   ] ACK 2 received; window can slide
+[DL   ] ACK 3 received; window can slide
+[DL   ] ACK 4 received; window can slide
+[DL   ] Go-Back-N Window [5-8] sending frames [5, 6, 7, 8]
+[DL   ] Frame 5 lost/corrupted. ACK not received.
+[DL   ] Timeout at frame 5. Retransmitting from 5 onward.
+[DL   ] Go-Back-N Window [5-8] sending frames [5, 6, 7, 8]
+[DL   ] ACK 5 received; window can slide
+[DL   ] ACK 6 received; window can slide
+[DL   ] ACK 7 received; window can slide
+[DL   ] ACK 8 received; window can slide
+[DL   ] Go-Back-N Window [9-10] sending frames [9, 10]
+[DL   ] ACK 9 received; window can slide
+[DL   ] ACK 10 received; window can slide
+[DL   ] Go-Back-N completed successfully
+[PHY  ] Star Topology: A1
+          \  |  /
+            [Hub-A]
+[PHY  ] Star Topology: A1  A2
+          \  |  /
+            [Hub-A]
+[PHY  ] Star Topology: A1  A2  A3
+          \  |  /
+            [Hub-A]
+[PHY  ] Star Topology: A1  A2  A3  A4
+          \  |  /
+            [Hub-A]
+[PHY  ] Star Topology: A1  A2  A3  A4  A5
+          \  |  /
+            [Hub-A]
+[PHY  ] Star Topology: B1
+          \  |  /
+            [Hub-B]
+[PHY  ] Star Topology: B1  B2
+          \  |  /
+            [Hub-B]
+[PHY  ] Star Topology: B1  B2  B3
+          \  |  /
+            [Hub-B]
+[PHY  ] Star Topology: B1  B2  B3  B4
+          \  |  /
+            [Hub-B]
+[PHY  ] Star Topology: B1  B2  B3  B4  B5
+          \  |  /
+            [Hub-B]
+[DL   ] CoreSwitch: Hub-A connected on port 1
+[DL   ] CoreSwitch: Hub-B connected on port 2
+[DL   ] Two star topologies connected via switch: 10 devices can communicate
+[DL   ] Broadcast domains = 1 with normal switch/VLAN default; collision domains = each switch port + hub shared segments
+
+============================================================================================
+SUBMISSION 2: NETWORK LAYER TESTS
+============================================================================================
+[NET  ] R1: route added 192.168.1.0/24 via direct dev g0/0 metric 0
+[NET  ] R1: interface g0/0 IP 192.168.1.1 network 192.168.1.0/24
+[NET  ] R1: route added 10.0.12.0/30 via direct dev s0/0 metric 0
+[NET  ] R1: interface s0/0 IP 10.0.12.1 network 10.0.12.0/30
+[NET  ] R2: route added 10.0.12.0/30 via direct dev s0/0 metric 0
+[NET  ] R2: interface s0/0 IP 10.0.12.2 network 10.0.12.0/30
+[NET  ] R2: route added 10.0.23.0/30 via direct dev s0/1 metric 0
+[NET  ] R2: interface s0/1 IP 10.0.23.1 network 10.0.23.0/30
+[NET  ] R3: route added 10.0.23.0/30 via direct dev s0/0 metric 0
+[NET  ] R3: interface s0/0 IP 10.0.23.2 network 10.0.23.0/30
+[NET  ] R3: route added 192.168.3.0/24 via direct dev g0/0 metric 0
+[NET  ] R3: interface g0/0 IP 192.168.3.1 network 192.168.3.0/24
+[NET  ] R1: route added 192.168.3.0/24 via 10.0.12.2 dev s0/0 metric 2
+[NET  ] R2: route added 192.168.1.0/24 via 10.0.12.1 dev s0/0 metric 1
+[NET  ] R2: route added 192.168.3.0/24 via 10.0.23.2 dev s0/1 metric 1
+[NET  ] R3: route added 192.168.1.0/24 via 10.0.23.1 dev s0/0 metric 2
+[NET  ] IP packet created: [IPv4 IHL:5 TTL:5 PROTO:TCP SRC:192.168.1.2 DST:192.168.3.2 DATA:Hello through static routing]
+[NET  ] R1: TTL decremented to 4
+[NET  ] R1: Longest prefix match for 192.168.3.2 -> 192.168.3.0/24 via 10.0.12.2
+[NET  ] R1: forwarding 192.168.1.2 -> 192.168.3.2 out s0/0
+[NET  ] R2: TTL decremented to 3
+[NET  ] R2: Longest prefix match for 192.168.3.2 -> 192.168.3.0/24 via 10.0.23.2
+[NET  ] R2: forwarding 192.168.1.2 -> 192.168.3.2 out s0/1
+[NET  ] R3: TTL decremented to 2
+[NET  ] R3: Longest prefix match for 192.168.3.2 -> 192.168.3.0/24 via direct
+[NET  ] R3: forwarding 192.168.1.2 -> 192.168.3.2 out g0/0
+[NET  ] R1: route added 192.168.3.0/24 via 10.0.12.2 dev s0/0 metric 2
+[NET  ] R1: route added 192.168.3.128/25 via 10.0.12.2 dev s0/0 metric 1
+[NET  ] R1: Longest prefix match for 192.168.3.130 -> 192.168.3.128/25 via 10.0.12.2
+[NET  ] R1: RIP neighbor R2 added
+[NET  ] R2: RIP neighbor R1 added
+[NET  ] R2: RIP neighbor R3 added
+[NET  ] R3: RIP neighbor R2 added
+[NET  ] RIP convergence round 1
+[NET  ] R2: RIP update received from R1
+[NET  ] R2: route added 192.168.1.0/24 via R1 dev to-R1 metric 1
+[NET  ] R2: route added 192.168.3.0/24 via R1 dev to-R1 metric 3
+[NET  ] R2: route added 192.168.3.128/25 via R1 dev to-R1 metric 2
+[NET  ] R1: RIP update received from R2
+[NET  ] R1: route added 10.0.23.0/30 via R2 dev to-R2 metric 1
+[NET  ] R1: route added 192.168.3.0/24 via R2 dev to-R2 metric 2
+[NET  ] R1: route added 192.168.3.128/25 via R2 dev to-R2 metric 3
+[NET  ] R3: RIP update received from R2
+[NET  ] R3: route added 10.0.12.0/30 via R2 dev to-R2 metric 1
+[NET  ] R3: route added 192.168.1.0/24 via R2 dev to-R2 metric 2
+[NET  ] R3: route added 192.168.3.128/25 via R2 dev to-R2 metric 3
+[NET  ] R2: RIP update received from R3
+[NET  ] R2: route added 192.168.3.0/24 via R3 dev to-R3 metric 1
+[NET  ] R2: route added 192.168.1.0/24 via R3 dev to-R3 metric 3
+[NET  ] R2: route added 192.168.3.128/25 via R3 dev to-R3 metric 4
+[NET  ] Routing table of R1
+[NET  ]   10.0.12.0/30 | mask 255.255.255.252 | next-hop direct | iface s0/0 | metric 0
+[NET  ]   10.0.23.0/30 | mask 255.255.255.252 | next-hop R2 | iface to-R2 | metric 1
+[NET  ]   192.168.1.0/24 | mask 255.255.255.0 | next-hop direct | iface g0/0 | metric 0
+[NET  ]   192.168.3.0/24 | mask 255.255.255.0 | next-hop 10.0.12.2 | iface s0/0 | metric 2
+[NET  ]   192.168.3.128/25 | mask 255.255.255.128 | next-hop 10.0.12.2 | iface s0/0 | metric 1
+[NET  ] Routing table of R2
+[NET  ]   10.0.12.0/30 | mask 255.255.255.252 | next-hop direct | iface s0/0 | metric 0
+[NET  ]   10.0.23.0/30 | mask 255.255.255.252 | next-hop direct | iface s0/1 | metric 0
+[NET  ]   192.168.1.0/24 | mask 255.255.255.0 | next-hop 10.0.12.1 | iface s0/0 | metric 1
+[NET  ]   192.168.3.0/24 | mask 255.255.255.0 | next-hop 10.0.23.2 | iface s0/1 | metric 1
+[NET  ]   192.168.3.128/25 | mask 255.255.255.128 | next-hop R1 | iface to-R1 | metric 2
+[NET  ] Routing table of R3
+[NET  ]   10.0.12.0/30 | mask 255.255.255.252 | next-hop R2 | iface to-R2 | metric 1
+[NET  ]   10.0.23.0/30 | mask 255.255.255.252 | next-hop direct | iface s0/0 | metric 0
+[NET  ]   192.168.1.0/24 | mask 255.255.255.0 | next-hop 10.0.23.1 | iface s0/0 | metric 2
+[NET  ]   192.168.3.0/24 | mask 255.255.255.0 | next-hop direct | iface g0/0 | metric 0
+[NET  ]   192.168.3.128/25 | mask 255.255.255.128 | next-hop R2 | iface to-R2 | metric 3
+[NET  ] RIP convergence round 2
+[NET  ] R2: RIP update received from R1
+[NET  ] R2: route added 192.168.1.0/24 via R1 dev to-R1 metric 1
+[NET  ] R2: route added 192.168.3.0/24 via R1 dev to-R1 metric 3
+[NET  ] R2: route added 192.168.3.128/25 via R1 dev to-R1 metric 2
+[NET  ] R1: RIP update received from R2
+[NET  ] R1: route added 10.0.23.0/30 via R2 dev to-R2 metric 1
+[NET  ] R1: route added 192.168.3.0/24 via R2 dev to-R2 metric 2
+[NET  ] R1: route added 192.168.3.128/25 via R2 dev to-R2 metric 3
+[NET  ] R3: RIP update received from R2
+[NET  ] R3: route added 10.0.12.0/30 via R2 dev to-R2 metric 1
+[NET  ] R3: route added 192.168.1.0/24 via R2 dev to-R2 metric 2
+[NET  ] R3: route added 192.168.3.128/25 via R2 dev to-R2 metric 3
+[NET  ] R2: RIP update received from R3
+[NET  ] R2: route added 192.168.3.0/24 via R3 dev to-R3 metric 1
+[NET  ] R2: route added 192.168.1.0/24 via R3 dev to-R3 metric 3
+[NET  ] R2: route added 192.168.3.128/25 via R3 dev to-R3 metric 4
+[NET  ] Routing table of R1
+[NET  ]   10.0.12.0/30 | mask 255.255.255.252 | next-hop direct | iface s0/0 | metric 0
+[NET  ]   10.0.23.0/30 | mask 255.255.255.252 | next-hop R2 | iface to-R2 | metric 1
+[NET  ]   192.168.1.0/24 | mask 255.255.255.0 | next-hop direct | iface g0/0 | metric 0
+[NET  ]   192.168.3.0/24 | mask 255.255.255.0 | next-hop 10.0.12.2 | iface s0/0 | metric 2
+[NET  ]   192.168.3.128/25 | mask 255.255.255.128 | next-hop 10.0.12.2 | iface s0/0 | metric 1
+[NET  ] Routing table of R2
+[NET  ]   10.0.12.0/30 | mask 255.255.255.252 | next-hop direct | iface s0/0 | metric 0
+[NET  ]   10.0.23.0/30 | mask 255.255.255.252 | next-hop direct | iface s0/1 | metric 0
+[NET  ]   192.168.1.0/24 | mask 255.255.255.0 | next-hop 10.0.12.1 | iface s0/0 | metric 1
+[NET  ]   192.168.3.0/24 | mask 255.255.255.0 | next-hop 10.0.23.2 | iface s0/1 | metric 1
+[NET  ]   192.168.3.128/25 | mask 255.255.255.128 | next-hop R1 | iface to-R1 | metric 2
+[NET  ] Routing table of R3
+[NET  ]   10.0.12.0/30 | mask 255.255.255.252 | next-hop R2 | iface to-R2 | metric 1
+[NET  ]   10.0.23.0/30 | mask 255.255.255.252 | next-hop direct | iface s0/0 | metric 0
+[NET  ]   192.168.1.0/24 | mask 255.255.255.0 | next-hop 10.0.23.1 | iface s0/0 | metric 2
+[NET  ]   192.168.3.0/24 | mask 255.255.255.0 | next-hop direct | iface g0/0 | metric 0
+[NET  ]   192.168.3.128/25 | mask 255.255.255.128 | next-hop R2 | iface to-R2 | metric 3
+
+============================================================================================
+SUBMISSION 3: TRANSPORT + APPLICATION LAYER TESTS
+============================================================================================
+[TCP  ] HostA: Process Browser-A bound to port 5001
+[TCP  ] HostA: Process FTP-Client-A bound to port 5002
+[TCP  ] HostB: Process HTTP-Server-B bound to port 80
+[TCP  ] HostB: Process FTP-Server-B bound to port 21
+[TCP  ] 3-way handshake on socket (192.168.1.2:5001) -> (192.168.2.2:80)
+[TCP  ] SYN sent: [TCP SrcPort:5001 DstPort:80 Seq:0 Ack:0 Flags:SYN Win:4 Data:]
+[TCP  ] SYN-ACK received: [TCP SrcPort:80 DstPort:5001 Seq:100 Ack:1 Flags:SYN-ACK Win:4 Data:]
+[TCP  ] ACK sent: [TCP SrcPort:5001 DstPort:80 Seq:1 Ack:101 Flags:ACK Win:4 Data:]
+[TCP  ] 3-way handshake on socket (192.168.1.2:5002) -> (192.168.2.2:21)
+[TCP  ] SYN sent: [TCP SrcPort:5002 DstPort:21 Seq:0 Ack:0 Flags:SYN Win:4 Data:]
+[TCP  ] SYN-ACK received: [TCP SrcPort:21 DstPort:5002 Seq:100 Ack:1 Flags:SYN-ACK Win:4 Data:]
+[TCP  ] ACK sent: [TCP SrcPort:5002 DstPort:21 Seq:1 Ack:101 Flags:ACK Win:4 Data:]
+[TCP  ] Sliding window [1-4] sending TCP segments
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:1 Ack:0 Flags:PSH-ACK Win:4 Data:Msg1]
+[TCP  ] ACK 2 received
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:2 Ack:0 Flags:PSH-ACK Win:4 Data:Msg2]
+[TCP  ] ACK 3 received
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:3 Ack:0 Flags:PSH-ACK Win:4 Data:Msg3]
+[TCP  ] ACK 4 received
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:4 Ack:0 Flags:PSH-ACK Win:4 Data:Msg4]
+[TCP  ] ACK 5 received
+[TCP  ] Sliding window [5-8] sending TCP segments
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:5 Ack:0 Flags:PSH-ACK Win:4 Data:Msg5]
+[TCP  ] ACK 6 received
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:6 Ack:0 Flags:PSH-ACK Win:4 Data:Msg6]
+[TCP  ] Segment 6 lost. No ACK received.
+[TCP  ] Timeout. Go-Back-N retransmission starts from segment 6
+[TCP  ] Sliding window [6-9] sending TCP segments
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:6 Ack:0 Flags:PSH-ACK Win:4 Data:Msg6]
+[TCP  ] ACK 7 received
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:7 Ack:0 Flags:PSH-ACK Win:4 Data:Msg7]
+[TCP  ] ACK 8 received
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:8 Ack:0 Flags:PSH-ACK Win:4 Data:Msg8]
+[TCP  ] ACK 9 received
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:9 Ack:0 Flags:PSH-ACK Win:4 Data:Msg9]
+[TCP  ] ACK 10 received
+[TCP  ] Sliding window [10-10] sending TCP segments
+[TCP  ] Sent [TCP SrcPort:5001 DstPort:80 Seq:10 Ack:0 Flags:PSH-ACK Win:4 Data:Msg10]
+[TCP  ] ACK 11 received
+[UDP  ] UDP datagram sent without handshake/retransmission: [UDP SrcPort:53000 DstPort:53 Len:25 Checksum:0x882C Data:DNS query payload]
+[TCP  ] HostB: Multiplexing delivered data to process HTTP-Server-B on port 80: GET /index.html HTTP/1.1
+[APP  ] HTTP Request created: GET /index.html HTTP/1.1
+[APP  ] HTTP Response: 200 OK — "Hello from HostB"
+[APP  ] FTP Client -> Server: CONNECT
+[APP  ] FTP Server -> Client: 220 FTP Service Ready
+[APP  ] FTP Client -> Server: LIST
+[APP  ] FTP Server -> Client: file1.txt file2.pdf
+[APP  ] FTP Client -> Server: STOR report.txt
+[APP  ] FTP Server -> Client: 226 Upload complete
+[APP  ] FTP Client -> Server: RETR file1.txt
+[APP  ] FTP Server -> Client: 226 Download complete
+[APP  ] FTP Client -> Server: QUIT
+[APP  ] FTP Server -> Client: 221 Goodbye
+[APP  ] SSH: remote login established on port 22
+[APP  ] SSH Client command: ls
+[APP  ] SSH Server response: main.py README.md network_simulator/
+[TCP  ] Connection teardown for (192.168.1.2:5001) -> (192.168.2.2:80): FIN -> FIN-ACK -> ACK
+
+============================================================================================
+MANDATORY FULL STACK TEST: HostA HTTP Client -> Router1 -> HostB HTTP Server
+============================================================================================
+[NET  ] Router1: route added 192.168.1.0/24 via direct dev g0/0 metric 0
+[NET  ] Router1: interface g0/0 IP 192.168.1.1 network 192.168.1.0/24
+[NET  ] Router1: route added 192.168.2.0/24 via direct dev g0/1 metric 0
+[NET  ] Router1: interface g0/1 IP 192.168.2.1 network 192.168.2.0/24
+[APP  ] DNS Query: What is the IP for hostb.local?
+[APP  ] DNS Response: hostb.local -> 192.168.2.2
+[NET  ] ARP Request: Who has 192.168.1.1? Tell 192.168.1.2
+[NET  ] ARP Reply: 192.168.1.1 is at AA:BB:CC:DD:EE:0A
+[NET  ] ARP Request: Who has 192.168.2.1? Tell 192.168.2.2
+[NET  ] ARP Reply: 192.168.2.1 is at AA:BB:CC:DD:EE:0B
+[APP  ] HTTP Request created: GET /index.html HTTP/1.1
+[TCP  ] 3-way handshake on socket (192.168.1.2:52000) -> (192.168.2.2:80)
+[TCP  ] SYN sent: [TCP SrcPort:52000 DstPort:80 Seq:0 Ack:0 Flags:SYN Win:4 Data:]
+[TCP  ] SYN-ACK received: [TCP SrcPort:80 DstPort:52000 Seq:100 Ack:1 Flags:SYN-ACK Win:4 Data:]
+[TCP  ] ACK sent: [TCP SrcPort:52000 DstPort:80 Seq:1 Ack:101 Flags:ACK Win:4 Data:]
+[NET  ] IP packet created, TTL set: [IPv4 IHL:5 TTL:8 PROTO:TCP SRC:192.168.1.2 DST:192.168.2.2 DATA:TCPSegment(src_port=52000, dest_port=80, seq=1, ack=101, flags='PSH-ACK', window=4, data='GET /index.html HTTP/1.1')]
+[NET  ] Router1: Longest prefix match for 192.168.2.2 -> 192.168.2.0/24 via direct
+[DL   ] HostA: Frame created [DST:AA:BB:CC:DD:EE:0A | SRC:AA:BB:CC:DD:EE:01 | TYPE:IPv4 | FCS:0xB1DC | Data:IPPacket(src_ip='192.168.1.2', dest_ip='192.168.2.2', payload=TCPSegment(src_port=52000, dest_port=80, seq=1, ack=101, flags='PSH-ACK', window=4, data='GET /index.html HTTP/1.1'), ttl=8, protocol='TCP', version=4, ihl=5)]
+[PHY  ] HostA: Signal sent using NRZ bits: 01011011 01000100 01010011 01010100 00111010 01000001 01000001 00111010 01000010 01000010 00111010 01000011 01000011 001
+[PHY  ] Router1: bits received and decoded from HostA
+[DL   ] Router1: CRC checked OK; incoming frame accepted
+[NET  ] Router1: TTL decremented to 7
+[NET  ] Router1: Longest prefix match for 192.168.2.2 -> 192.168.2.0/24 via direct
+[NET  ] Router1: forwarding 192.168.1.2 -> 192.168.2.2 out g0/1
+[NET  ] ARP Request: Who has 192.168.2.2? Tell 192.168.1.2
+[NET  ] ARP Reply: 192.168.2.2 is at AA:BB:CC:DD:EE:02
+[DL   ] Router1: Re-framed for next hop: [DST:AA:BB:CC:DD:EE:02 | SRC:AA:BB:CC:DD:EE:0B | TYPE:IPv4 | FCS:0x47FE | Data:IPPacket(src_ip='192.168.1.2', dest_ip='192.168.2.2', payload=TCPSegment(src_port=52000, dest_port=80, seq=1, ack=101, flags='PSH-ACK', window=4, data='GET /index.html HTTP/1.1'), ttl=7, protocol='TCP', version=4, ihl=5)]
+[PHY  ] Router1 -> HostB: Transmitted encoded bits for frame
+[PHY  ] HostB: bits received and decoded
+[DL   ] HostB: Frame accepted after CRC check: [DST:AA:BB:CC:DD:EE:02 | SRC:AA:BB:CC:DD:EE:0B | TYPE:IPv4 | FCS:0x47FE | Data:IPPacket(src_ip='192.168.1.2', dest_ip='192.168.2.2', payload=TCPSegment(src_port=52000, dest_port=80, seq=1, ack=101, flags='PSH-ACK', window=4, data='GET /index.html HTTP/1.1'), ttl=7, protocol='TCP', version=4, ihl=5)]
+[NET  ] HostB: IP packet delivered to 192.168.2.2: [IPv4 IHL:5 TTL:7 PROTO:TCP SRC:192.168.1.2 DST:192.168.2.2 DATA:TCPSegment(src_port=52000, dest_port=80, seq=1, ack=101, flags='PSH-ACK', window=4, data='GET /index.html HTTP/1.1')]
+[TCP  ] HostB: TCP segment delivered to port 80: [TCP SrcPort:52000 DstPort:80 Seq:1 Ack:101 Flags:PSH-ACK Win:4 Data:GET /index.html HTTP/1.1]
+[APP  ] HTTP Response: 200 OK — "Hello from HostB"
+[APP  ] HTTP response travels back using same encapsulation path
+[TCP  ] [TCP SrcPort:80 DstPort:52000 Seq:101 Ack:2 Flags:PSH-ACK Win:4 Data:HTTP/1.1 200 OK\r\nContent: Hello from HostB]
+[NET  ] [IPv4 IHL:5 TTL:8 PROTO:TCP SRC:192.168.2.2 DST:192.168.1.2 DATA:TCPSegment(src_port=80, dest_port=52000, seq=101, ack=2, flags='PSH-ACK', window=4, data='HTTP/1.1 200 OK\\r\\nContent: Hello from HostB')]
+[DL   ] HostB: Frame created [DST:AA:BB:CC:DD:EE:0B | SRC:AA:BB:CC:DD:EE:02 | TYPE:IPv4 | FCS:0x7630 | Data:IPPacket(src_ip='192.168.2.2', dest_ip='192.168.1.2', payload=TCPSegment(src_port=80, dest_port=52000, seq=101, ack=2, flags='PSH-ACK', window=4, data='HTTP/1.1 200 OK\\r\\nContent: Hello from HostB'), ttl=8, protocol='TCP', version=4, ihl=5)]
+[PHY  ] HostB -> Router1 -> HostA: response bits encoded and transmitted
+[NET  ] Router1: TTL decremented to 7
+[NET  ] Router1: Longest prefix match for 192.168.1.2 -> 192.168.1.0/24 via direct
+[NET  ] Router1: forwarding 192.168.2.2 -> 192.168.1.2 out g0/0
+[DL   ] HostA: Frame accepted after CRC check: [DST:AA:BB:CC:DD:EE:01 | SRC:AA:BB:CC:DD:EE:0A | TYPE:IPv4 | FCS:0xAE88 | Data:IPPacket(src_ip='192.168.2.2', dest_ip='192.168.1.2', payload=TCPSegment(src_port=80, dest_port=52000, seq=101, ack=2, flags='PSH-ACK', window=4, data='HTTP/1.1 200 OK\\r\\nContent: Hello from HostB'), ttl=7, protocol='TCP', version=4, ihl=5)]
+[APP  ] HostA Browser received: HTTP/1.1 200 OK — Hello from HostB
+[APP  ] Full encapsulation and decapsulation completed: APP -> TCP -> IP -> Frame -> Bits and back
