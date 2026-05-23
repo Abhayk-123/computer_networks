@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Network Simulator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#000;margin:0;padding:10px;}
+  header{border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:10px;}
+  h1{font-size:24px;margin:0;}
+  .layout{display:flex;gap:20px;}
+  .sidebar{width:310px;border:1px solid #000;padding:10px;background:#f9f9f9;flex-shrink:0;}
+  fieldset{margin-bottom:12px;border:1px solid #ccc;padding:10px;}
+  legend{font-weight:bold;}
+  label{display:block;margin-top:5px;font-size:13px;}
+  input,select{width:92%;margin-bottom:5px;border:1px solid #aaa;padding:4px;font-size:13px;}
+  button{margin:2px 0;padding:5px 8px;border:1px solid #888;background:#e0e0e0;cursor:pointer;color:#000;font-size:13px;}
+  button:hover{background:#ccc;}
+  .canvas-wrap{flex:1;border:1px solid #000;display:flex;flex-direction:column;background:#fafafa;}
+  .toolbar{border-bottom:1px solid #000;padding:5px;background:#eee;}
+  #cy{flex:1;min-height:420px;}
+  .rpanel{width:360px;border:1px solid #000;background:#f9f9f9;display:flex;flex-direction:column;flex-shrink:0;}
+  .tabs{display:flex;border-bottom:1px solid #000;background:#eee;}
+  .tab{flex:1;padding:8px 4px;cursor:pointer;text-align:center;border-right:1px solid #000;font-size:13px;}
+  .tab:last-child{border-right:none;}
+  .tab.active{background:#fff;font-weight:bold;border-bottom:1px solid #fff;margin-bottom:-1px;}
+  .pane{padding:10px;display:none;overflow-y:auto;flex:1;max-height:620px;}
+  .pane.active{display:block;}
+  .log-entry{font-family:monospace;font-size:12px;margin-bottom:4px;padding-bottom:4px;border-bottom:1px dotted #ccc;}
+  .log-time{color:#666;margin-right:8px;}
+  .success{color:green;} .error{color:red;} .info{color:blue;} .warn{color:orange;}
+  .res-block{border:1px solid #999;padding:10px;margin-bottom:10px;background:#fff;}
+  .res-title{font-weight:bold;margin-bottom:5px;border-bottom:1px solid #ccc;padding-bottom:5px;}
+  .kv{display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px;}
+  .kv-k{color:#333;} .kv-v.ok{color:green;font-weight:bold;} .kv-v.bad{color:red;font-weight:bold;}
+  .proto-ev{font-size:12px;margin-bottom:2px;}
+  .ev-tag{font-weight:bold;margin-right:5px;}
+  .tag-green{color:green;} .tag-yellow{color:orange;} .tag-red{color:red;} .tag-blue{color:blue;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px;}
+  th,td{border:1px solid #ccc;padding:5px;text-align:left;}
+  th{background:#eee;}
+  .stat-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+  .stat-card{border:1px solid #ccc;padding:10px;width:42%;background:#fff;text-align:center;}
+  .stat-num{font-size:20px;font-weight:bold;}
+  .node-tooltip{position:fixed;background:#ffffe0;border:1px solid #000;padding:8px;font-size:12px;display:none;z-index:100;pointer-events:none;}
+  .tooltip-title{font-weight:bold;margin-bottom:4px;border-bottom:1px solid #000;}
+  .conn-mode{background:#e0ffff;border:1px solid #008b8b;padding:5px;font-size:12px;margin-bottom:8px;display:none;}
+  .conn-mode.active{display:block;}
+  .send-btn{font-weight:bold;width:100%;}
+  .arq-tabs{display:flex;gap:4px;margin-bottom:8px;}
+  .arq-tab{padding:4px 10px;border:1px solid #888;cursor:pointer;background:#eee;font-size:12px;}
+  .arq-tab.active{background:#fff;font-weight:bold;border-bottom:1px solid #fff;}
+  .arq-pane{display:none;} .arq-pane.active{display:block;}
+  .delivery-table td.yes{color:green;font-weight:bold;} .delivery-table td.no{color:red;font-weight:bold;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Network Protocol Simulator</h1>
+  <p>Physical &amp; Data Link Layer — Hub Broadcast | Switch Flooding then Unicast | Access: ALOHA/CSMA/CSMA-CD/CSMA-CA | Error: Checksum/CRC/Parity</p>
+</header>
+
+<div class="layout">
+  <!-- ── Sidebar ── -->
+  <div class="sidebar">
+    <fieldset>
+      <legend>Add Device</legend>
+      <label>Device Name (blank = auto)</label>
+      <input id="dev-name"/>
+      <button onclick="addDevice('host')">Add Host</button>
+      <button onclick="addDevice('hub')">Add Hub</button>
+      <button onclick="addDevice('switch')">Add Switch</button>
+      <button onclick="addDevice('bridge')">Add Bridge</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Connect Devices</legend>
+      <div id="conn-hint" class="conn-mode">Click source then destination!</div>
+      <button id="click-conn-btn" onclick="enableClickConnect()">Toggle Click-to-Connect</button>
+      <div style="margin-top:8px;">
+        <label>Device A</label><input id="conn-a"/>
+        <label>Device B</label><input id="conn-b"/>
+        <button onclick="connectDevices()">Connect Manually</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Send Data</legend>
+      <label>From</label><input id="send-from"/>
+      <label>To</label><input id="send-to"/>
+      <label>Message</label><input id="send-msg" value="Hello Network!"/>
+      <label>Error Control</label>
+      <select id="err-proto">
+        <option value="all" selected>All (CRC + Checksum + Parity)</option>
+        <option value="crc">CRC</option>
+        <option value="checksum">Checksum</option>
+        <option value="parity">Parity</option>
+      </select>
+      <label>Access Control</label>
+      <select id="acc-proto">
+        <option value="all" selected>All (ALOHA + CSMA + CSMA/CD + CSMA/CA)</option>
+        <option value="aloha">ALOHA</option>
+        <option value="csma">CSMA</option>
+        <option value="csmacd">CSMA/CD</option>
+        <option value="csmaca">CSMA/CA</option>
+      </select>
+      <button class="send-btn" onclick="sendData()">▶ Send Frame</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Quick Scenarios</legend>
+      <button onclick="runScenario('p2p')" style="width:100%">P2P (2 hosts)</button>
+      <button onclick="runScenario('star-hub')" style="width:100%">Star via Hub</button>
+      <button onclick="runScenario('switch')" style="width:100%">Star via Switch</button>
+      <button onclick="runScenario('dual-star')" style="width:100%">Dual Star</button>
+      <button onclick="resetAll()" style="width:100%;color:red;margin-top:5px;">Reset All</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Flow Control (ARQ) — Standalone</legend>
+      <label>Protocol</label>
+      <select id="arq-proto">
+        <option value="saw">Stop-and-Wait ARQ</option>
+        <option value="gbn" selected>Go-Back-N ARQ</option>
+        <option value="sr">Selective Repeat ARQ</option>
+        <option value="all">All Three (compare)</option>
+      </select>
+      <label>Window Size (GBN / SR)</label>
+      <input id="arq-window" type="number" value="4" min="1" max="16"/>
+      <label>Error Rate (0.0 – 1.0)</label>
+      <input id="arq-error" type="number" value="0.2" step="0.05" min="0" max="1"/>
+      <label>Number of Frames</label>
+      <input id="arq-frames" type="number" value="8" min="1" max="30"/>
+      <button style="width:100%;margin-top:4px;" onclick="runARQ()">Run Protocol</button>
+    </fieldset>
+  </div>
+
+  <!-- ── Canvas ── -->
+  <div class="canvas-wrap">
+    <div class="toolbar">
+      <strong>TOPOLOGY Canvas</strong> |
+      <button onclick="cy.fit()">Fit</button>
+      <button onclick="cy.zoom(cy.zoom()*1.25)">Zoom +</button>
+      <button onclick="cy.zoom(cy.zoom()*0.8)">Zoom −</button>
+      <button onclick="relayout()">Auto Layout</button>
+      <button id="del-btn" onclick="deleteSelected()" style="display:none;color:red;">Delete Selected</button>
+      <span id="canvas-hint" style="margin-left:16px;font-size:12px;color:#666;">Build your network topology.</span>
+    </div>
+    <div id="cy"></div>
+    <div class="node-tooltip" id="tooltip">
+      <div class="tooltip-title" id="tt-name"></div>
+      <div>Type: <span id="tt-type"></span></div>
+      <div>MAC: <span id="tt-mac"></span></div>
+      <div>Links: <span id="tt-conn"></span></div>
+    </div>
+  </div>
+
+  <!-- ── Right Panel ── -->
+  <div class="rpanel">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('log')">Log</div>
+      <div class="tab" onclick="showTab('stats')">Stats</div>
+      <div class="tab" onclick="showTab('mac')">MAC Table</div>
+      <div class="tab" onclick="showTab('proto')">Protocols</div>
+    </div>
+
+    <div class="pane active" id="pane-log">
+      <div id="log-empty">No events yet. Add devices to start.</div>
+      <div id="log-entries"></div>
+    </div>
+
+    <div class="pane" id="pane-stats">
+      <div class="stat-grid">
+        <div class="stat-card"><div>Collision Domains</div><div class="stat-num" id="st-cd">0</div></div>
+        <div class="stat-card"><div>Broadcast Domains</div><div class="stat-num" id="st-bd">0</div></div>
+        <div class="stat-card"><div>Hosts</div><div class="stat-num" id="st-hosts">0</div></div>
+        <div class="stat-card"><div>Links</div><div class="stat-num" id="st-links">0</div></div>
+      </div>
+      <div id="stats-detail"></div>
+    </div>
+
+    <div class="pane" id="pane-mac">
+      <div id="mac-empty">No MAC entries yet. Run a Switch scenario.</div>
+      <div id="mac-content"></div>
+    </div>
+
+    <div class="pane" id="pane-proto">
+      <div id="proto-empty">Send a frame to view protocol details.</div>
+      <div id="proto-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let cy = null;
+let devices   = {};     // id -> {type, mac, connections:[]}
+let linkCount = 0;
+let clickConnectMode   = false;
+let clickConnectSource = null;
+let macTables = {};
+
+// ═══════════════════════════════════════════════════════
+//  CYTOSCAPE INIT
+// ═══════════════════════════════════════════════════════
+function initCy() {
+  cy = cytoscape({
+    container: document.getElementById('cy'),
+    elements: [],
+    style: [
+      { selector: 'node', style: {
+          'background-color': '#fff', 'border-width': 2, 'border-color': '#000',
+          'color': '#000', 'font-size': 13, 'font-weight': 'bold',
+          'label': 'data(label)', 'text-valign': 'bottom', 'text-margin-y': 4,
+          'width': 45, 'height': 45, 'cursor': 'pointer'
+      }},
+      { selector: 'node[type="hub"]',    style: {'background-color':'#ffe0b2','border-color':'#e65100'}},
+      { selector: 'node[type="switch"]', style: {'background-color':'#e3f2fd','border-color':'#1565c0'}},
+      { selector: 'node[type="bridge"]', style: {'background-color':'#f3e5f5','border-color':'#6a1b9a'}},
+      { selector: 'node[type="host"]',   style: {'background-color':'#e8f5e9','border-color':'#2e7d32'}},
+      { selector: 'node.sending', style: {'background-color':'#ffeb3b','border-color':'#f57f17','border-width':4}},
+      { selector: 'edge', style: {
+          'width': 2, 'line-color': '#666', 'target-arrow-color': '#666',
+          'label': 'data(bw)', 'font-size': 11, 'color': '#000',
+          'text-background-color': '#fff', 'text-background-opacity': 0.8,
+          'curve-style': 'bezier'
+      }},
+      { selector: 'edge.active', style: {'line-color':'#0055ff','width':4}},
+      { selector: 'edge:selected', style: {'line-color':'#ff0000','width':3}}
+    ],
+    layout: {name:'preset'},
+    userZoomingEnabled: true, userPanningEnabled: true,
+    boxSelectionEnabled: true, selectionType: 'single',
+    minZoom: 0.2, maxZoom: 4,
+  });
+
+  cy.on('mouseover','node', e => {
+    const n = e.target, dev = devices[n.id()];
+    if (!dev) return;
+    document.getElementById('tt-name').textContent = n.id();
+    document.getElementById('tt-type').textContent = dev.type.toUpperCase();
+    document.getElementById('tt-mac').textContent  = dev.mac;
+    document.getElementById('tt-conn').textContent = dev.connections.length;
+    const pos = n.renderedPosition();
+    const rect = document.getElementById('cy').getBoundingClientRect();
+    const tt = document.getElementById('tooltip');
+    tt.style.left = (rect.left + pos.x + 52) + 'px';
+    tt.style.top  = (rect.top  + pos.y - 10) + 'px';
+    tt.style.display = 'block';
+  });
+  cy.on('mouseout','node', () => { document.getElementById('tooltip').style.display='none'; });
+
+  cy.on('tap','node', e => {
+    if (!clickConnectMode) { document.getElementById('del-btn').style.display='inline-block'; return; }
+    const nodeId = e.target.id();
+    if (!clickConnectSource) {
+      clickConnectSource = nodeId;
+      e.target.addClass('conn-source');
+      document.getElementById('canvas-hint').textContent = 'Now click DESTINATION node';
+      addLog('Source: ' + nodeId + ' — click destination', 'info');
+    } else {
+      if (clickConnectSource === nodeId) { addLog('Cannot connect to itself','warn'); return; }
+      document.getElementById('conn-a').value = clickConnectSource;
+      document.getElementById('conn-b').value = nodeId;
+      cy.$('#' + clickConnectSource).removeClass('conn-source');
+      connectDevices();
+      clickConnectSource = null; clickConnectMode = false;
+      document.getElementById('click-conn-btn').textContent = 'Toggle Click-to-Connect';
+      document.getElementById('conn-hint').classList.remove('active');
+      document.getElementById('canvas-hint').textContent = 'Drag nodes freely';
+    }
+  });
+  cy.on('tap', e => { if (e.target === cy) document.getElementById('del-btn').style.display='none'; });
+
+  cy.on('cxttap','node', e => {
+    const id = e.target.id();
+    if (confirm('Delete device "' + id + '"?')) {
+      cy.remove(e.target);
+      cy.edges('[source="'+id+'"],[target="'+id+'"]').remove();
+      delete devices[id]; updateStats();
+      addLog('Deleted: ' + id, 'warn');
+    }
+  });
+  cy.on('cxttap','edge', e => {
+    const src = e.target.data('source'), tgt = e.target.data('target');
+    if (confirm('Delete link ' + src + ' ↔ ' + tgt + '?')) {
+      if (devices[src]) devices[src].connections = devices[src].connections.filter(c=>c!==tgt);
+      if (devices[tgt]) devices[tgt].connections = devices[tgt].connections.filter(c=>c!==src);
+      cy.remove(e.target); updateStats();
+      addLog('Deleted link: ' + src + ' ↔ ' + tgt, 'warn');
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  DEVICE & LINK MANAGEMENT
+// ═══════════════════════════════════════════════════════
+let devCounters = {host:0,hub:0,switch:0,bridge:0};
+
+function autoGenName(type) {
+  const prefix = {host:'PC',hub:'Hub',switch:'SW',bridge:'Bridge'}[type] || type;
+  while(true){ devCounters[type]++; let c=prefix+devCounters[type]; if(!devices[c]) return c; }
+}
+
+function addDevice(type, customPos=null) {
+  const inp = document.getElementById('dev-name');
+  let name = inp.value.trim() || autoGenName(type);
+  if (devices[name]) { addLog('"'+name+'" already exists','error'); return; }
+  const mac = genMAC();
+  devices[name] = {type, mac, connections:[]};
+  cy.add({group:'nodes', data:{id:name,label:name,type}, position: customPos || getSpreadPos(type)});
+  if (!customPos) inp.value = '';
+  updateStats();
+  addLog('Added '+type.toUpperCase()+': '+name,'success');
+}
+
+function connectDevices() {
+  const a = document.getElementById('conn-a').value.trim();
+  const b = document.getElementById('conn-b').value.trim();
+  if (!a||!b) { addLog('Enter both device names','warn'); return; }
+  if (!devices[a]) { addLog('"'+a+'" not found','error'); return; }
+  if (!devices[b]) { addLog('"'+b+'" not found','error'); return; }
+  if (a===b) { addLog('Cannot connect to itself','error'); return; }
+  if (cy.edges('[source="'+a+'"][target="'+b+'"],[source="'+b+'"][target="'+a+'"]').length>0) {
+    addLog(a+' and '+b+' already connected','warn'); return;
+  }
+  cy.add({group:'edges', data:{id:a+'_'+b+'_'+(++linkCount), source:a, target:b, bw:'100M'}});
+  if (!devices[a].connections.includes(b)) devices[a].connections.push(b);
+  if (!devices[b].connections.includes(a)) devices[b].connections.push(a);
+  document.getElementById('conn-a').value='';
+  document.getElementById('conn-b').value='';
+  updateStats();
+  addLog('Connected: '+a+' ↔ '+b,'success');
+}
+
+function enableClickConnect() {
+  clickConnectMode = !clickConnectMode;
+  clickConnectSource = null;
+  const btn  = document.getElementById('click-conn-btn');
+  const hint = document.getElementById('conn-hint');
+  if (clickConnectMode) {
+    btn.textContent='Cancel Connect Mode'; hint.classList.add('active');
+    document.getElementById('canvas-hint').textContent='Click SOURCE node first';
+    addLog('Connect mode ON','info');
+  } else {
+    btn.textContent='Toggle Click-to-Connect'; hint.classList.remove('active');
+    document.getElementById('canvas-hint').textContent='Drag nodes freely';
+    cy.nodes().removeClass('conn-source');
+  }
+}
+
+function deleteSelected() {
+  const sel = cy.$(':selected');
+  sel.forEach(el => {
+    if (el.isNode()) {
+      const id=el.id();
+      cy.edges('[source="'+id+'"],[target="'+id+'"]').remove();
+      delete devices[id]; addLog('Deleted: '+id,'info');
+    } else {
+      const src=el.data('source'), tgt=el.data('target');
+      if(devices[src]) devices[src].connections=devices[src].connections.filter(c=>c!==tgt);
+      if(devices[tgt]) devices[tgt].connections=devices[tgt].connections.filter(c=>c!==src);
+      addLog('Deleted link: '+src+' ↔ '+tgt,'info');
+    }
+  });
+  cy.remove(sel); updateStats();
+  document.getElementById('del-btn').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════
+//  SEND DATA
+// ═══════════════════════════════════════════════════════
+function sendData() {
+  const src = document.getElementById('send-from').value.trim();
+  const dst = document.getElementById('send-to').value.trim();
+  const msg = document.getElementById('send-msg').value.trim() || 'Data';
+  if (!src||!dst) { addLog('Enter source and destination','warn'); return; }
+  if (!devices[src]) { addLog('Source not found','error'); return; }
+  if (!devices[dst]) { addLog('Destination not found','error'); return; }
+
+  const srcDev = devices[src], dstDev = devices[dst];
+  const path = findPath(src, dst);
+
+  // ── Determine delivery mode from first forwarding device ──
+  // Hub  = blind sender (broadcast on all ports except ingress)
+  // Switch = smart sender (flood first for unknown MAC, then unicast)
+  const firstForwarder = path.length > 1 ? path[1] : null;
+  const firstType = firstForwarder && devices[firstForwarder] ? devices[firstForwarder].type : null;
+  const hubInPath    = firstType === 'hub' ? firstForwarder : null;
+  const switchInPath = firstType === 'switch' ? firstForwarder : null;
+
+  const selectedErr = document.getElementById('err-proto').value;
+  const selectedAcc = document.getElementById('acc-proto').value;
+
+  const crc       = runCRC(msg);
+  const checksum  = runChecksum(msg);
+  const parity    = runParity(msg);
+  const aloha     = runALOHA();
+  const csma      = runCSMA();
+  const csmaCd    = runCSMACD(src);
+  const csmaCa    = runCSMACA();
+  const accessSet = { aloha, csma, csmaCd, csmaCa };
+  const errorSet  = { crc, checksum, parity };
+  const winSz = parseInt(document.getElementById('arq-window').value)||4;
+  const errR  = parseFloat(document.getElementById('arq-error').value)||0.2;
+  const saw   = runStopAndWait(errR, 5);
+  const gbn   = runGoBackN(winSz, errR, 5);
+  const sr    = runSelectiveRepeat(winSz, errR, 5);
+
+  // Update MAC table for first-hop switch and detect "first flood, then unicast"
+  let switchFlood = false;
+  if (switchInPath) {
+    if (!macTables[switchInPath]) macTables[switchInPath] = {};
+    const destKnown = !!macTables[switchInPath][dstDev.mac];
+    if (!destKnown) switchFlood = true;
+    // Switch learns source MAC on incoming frame.
+    macTables[switchInPath][srcDev.mac] = src;
+    // Destination can be learned after successful forwarding.
+    macTables[switchInPath][dstDev.mac] = dst;
+    renderMACTable();
+  }
+
+  // Compute delivery report
+  let deliveryReport = {};
+  if (hubInPath) {
+    // Strict hub behavior: sender -> hub, then hub broadcasts to every other connected device.
+    const hubDev = devices[hubInPath];
+    const hubIdx = path.indexOf(hubInPath);
+    const ingressPort = hubIdx > 0 ? path[hubIdx - 1] : src;
+    const recipients = hubDev.connections.filter(id => devices[id]); // explicitly to all devices to satisfy the broadcasting requirement
+    recipients.forEach(id => { deliveryReport[id] = true; });
+    addLog('Hub broadcast: '+hubInPath+' receives from '+ingressPort+' and sends to all devices','info');
+    recipients.forEach(id => addLog('  ✓ Broadcast reached '+id,'success'));
+  } else if (switchInPath && switchFlood) {
+    const swDev = devices[switchInPath];
+    swDev.connections.forEach(id => {
+      if (id !== src && devices[id] && devices[id].type === 'host') {
+        deliveryReport[id] = true;
+      }
+    });
+    addLog('Switch flooding (unknown destination MAC): '+src+' → all switch ports except source','warn');
+    addLog('Next frames will use unicast after MAC learning.','info');
+  } else {
+    deliveryReport[dst] = true;
+    addLog('Frame: '+src+' → '+dst+(switchInPath?' [unicast via switch]':''),'info');
+  }
+
+  if (selectedErr === 'all' || selectedErr === 'crc') addLog('Error Control [CRC]: '+(crc.valid?'Valid':'Error'), crc.valid?'success':'error');
+  if (selectedErr === 'all' || selectedErr === 'checksum') addLog('Error Control [Checksum]: '+(checksum.valid?'Valid':'Error'), checksum.valid?'success':'error');
+  if (selectedErr === 'all' || selectedErr === 'parity') addLog('Error Control [Parity]: '+(parity.valid?'Valid':'Error'), parity.valid?'success':'error');
+
+  if (selectedAcc === 'all' || selectedAcc === 'aloha') addLog('Access Control [ALOHA]: '+(aloha.success?'OK':'Retry'), aloha.success?'success':'warn');
+  if (selectedAcc === 'all' || selectedAcc === 'csma') addLog('Access Control [CSMA]: '+(csma.success?'OK':'Busy/Defer'), csma.success?'success':'warn');
+  if (selectedAcc === 'all' || selectedAcc === 'csmacd') addLog('Access Control [CSMA/CD]: '+(csmaCd.success?'OK':'Collision'), csmaCd.success?'success':'warn');
+  if (selectedAcc === 'all' || selectedAcc === 'csmaca') addLog('Access Control [CSMA/CA]: '+(csmaCa.success?'OK':'Backoff'), csmaCa.success?'success':'warn');
+  addLog('Stop-and-Wait efficiency: '+saw.efficiency,'success');
+  addLog('Go-Back-N efficiency: '+gbn.efficiency,'success');
+  addLog('Selective Repeat efficiency: '+sr.efficiency,'success');
+
+  showTab('proto');
+  renderProtocols(errorSet, accessSet, selectedErr, selectedAcc, saw, gbn, sr, src, dst, msg, srcDev, dstDev, path, deliveryReport, hubInPath, switchInPath, switchFlood);
+
+  // Animate the actual delivery
+  if (hubInPath || (switchInPath && switchFlood)) {
+    let centerNode = hubInPath || switchInPath;
+    let recs = Object.keys(deliveryReport).filter(id => id !== centerNode);
+    animateBroadcast(src, centerNode, recs);
+  } else {
+    animatePath(path);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PATH FINDING & ANIMATION
+// ═══════════════════════════════════════════════════════
+function findPath(src, dst) {
+  const visited = new Set(), queue = [[src]];
+  while (queue.length) {
+    const path = queue.shift(), node = path[path.length-1];
+    if (node === dst) return path;
+    if (visited.has(node)) continue;
+    visited.add(node);
+    cy.$('#'+node).neighborhood('node').forEach(n => {
+      if (!visited.has(n.id())) queue.push([...path, n.id()]);
+    });
+  }
+  return [src, dst];
+}
+
+function animatePath(path) {
+  path.forEach((nodeId, i) => {
+    setTimeout(() => {
+      cy.$('#'+nodeId).addClass('sending');
+      if (i > 0) {
+        const prev = path[i-1];
+        cy.edges('[source="'+prev+'"][target="'+nodeId+'"],[source="'+nodeId+'"][target="'+prev+'"]').addClass('active');
+      }
+      setTimeout(() => {
+        cy.$('#'+nodeId).removeClass('sending');
+        if (i > 0) {
+          const prev = path[i-1];
+          cy.edges('[source="'+prev+'"][target="'+nodeId+'"],[source="'+nodeId+'"][target="'+prev+'"]').removeClass('active');
+        }
+      }, 700);
+    }, i * 500);
+  });
+}
+
+function animateBroadcast(src, centerId, recipients) {
+  // src -> center
+  cy.$('#'+src).addClass('sending');
+  cy.edges('[source="'+src+'"][target="'+centerId+'"],[source="'+centerId+'"][target="'+src+'"]').addClass('active');
+
+  setTimeout(() => {
+    cy.$('#'+src).removeClass('sending');
+    cy.edges('[source="'+src+'"][target="'+centerId+'"],[source="'+centerId+'"][target="'+src+'"]').removeClass('active');
+    
+    // centerId -> recipients
+    cy.$('#'+centerId).addClass('sending');
+    recipients.forEach(id => {
+      cy.edges('[source="'+centerId+'"][target="'+id+'"],[source="'+id+'"][target="'+centerId+'"]').addClass('active');
+      cy.$('#'+id).addClass('sending');
+    });
+
+    setTimeout(() => {
+      cy.$('#'+centerId).removeClass('sending');
+      recipients.forEach(id => {
+        cy.edges('[source="'+centerId+'"][target="'+id+'"],[source="'+id+'"][target="'+centerId+'"]').removeClass('active');
+        cy.$('#'+id).removeClass('sending');
+      });
+    }, 700);
+  }, 500);
+}
+
+// ═══════════════════════════════════════════════════════
+//  QUICK SCENARIOS
+// ═══════════════════════════════════════════════════════
+function runScenario(name) {
+  resetAll();
+  if (name === 'p2p') {
+    addDeviceDirect('PC1','host'); addDeviceDirect('PC2','host');
+    connectDirect('PC1','PC2');
+    document.getElementById('send-from').value='PC1';
+    document.getElementById('send-to').value='PC2';
+    addLog('Scenario: P2P built','success');
+  } else if (name === 'star-hub') {
+    addDeviceDirect('Hub1','hub');
+    for(let i=1;i<=5;i++){ addDeviceDirect('PC'+i,'host'); connectDirect('PC'+i,'Hub1'); }
+    document.getElementById('send-from').value='PC1';
+    document.getElementById('send-to').value='PC3';
+    addLog('Scenario: Star-Hub built — PC1 sends, Hub broadcasts to PC2–PC5','success');
+  } else if (name === 'switch') {
+    addDeviceDirect('SW1','switch');
+    for(let i=1;i<=5;i++){ addDeviceDirect('PC'+i,'host'); connectDirect('PC'+i,'SW1'); }
+    document.getElementById('send-from').value='PC1';
+    document.getElementById('send-to').value='PC3';
+    addLog('Scenario: Star-Switch built — unicast PC1 → PC3','success');
+  } else if (name === 'dual-star') {
+    addDeviceDirect('SW1','switch');
+    addDeviceDirect('Hub1','hub'); addDeviceDirect('Hub2','hub');
+    connectDirect('Hub1','SW1'); connectDirect('Hub2','SW1');
+    for(let i=1;i<=5;i++){ addDeviceDirect('PC'+i,'host'); connectDirect('PC'+i,'Hub1'); }
+    for(let i=6;i<=10;i++){ addDeviceDirect('PC'+i,'host'); connectDirect('PC'+i,'Hub2'); }
+    document.getElementById('send-from').value='PC1';
+    document.getElementById('send-to').value='PC8';
+    addLog('Scenario: Dual-Star built','success');
+  }
+  relayout(); updateStats();
+}
+
+function addDeviceDirect(name, type) {
+  if (devices[name]) return;
+  devices[name] = {type, mac:genMAC(), connections:[]};
+  cy.add({group:'nodes', data:{id:name,label:name,type}, position:getSpreadPos(type)});
+}
+
+function connectDirect(a, b) {
+  if (!devices[a]||!devices[b]) return;
+  if (cy.edges('[source="'+a+'"][target="'+b+'"],[source="'+b+'"][target="'+a+'"]').length>0) return;
+  cy.add({group:'edges', data:{id:a+'_'+b+'_'+(++linkCount), source:a, target:b, bw:'100M'}});
+  if (!devices[a].connections.includes(b)) devices[a].connections.push(b);
+  if (!devices[b].connections.includes(a)) devices[b].connections.push(a);
+}
+
+// ═══════════════════════════════════════════════════════
+//  ARQ STANDALONE
+// ═══════════════════════════════════════════════════════
+function runARQ() {
+  const proto  = document.getElementById('arq-proto').value;
+  const winSz  = parseInt(document.getElementById('arq-window').value)||4;
+  const errR   = parseFloat(document.getElementById('arq-error').value)||0.2;
+  const nFrames= parseInt(document.getElementById('arq-frames').value)||8;
+  showTab('proto');
+  document.getElementById('proto-empty').style.display='none';
+  const c = document.getElementById('proto-content');
+  if (proto === 'saw') {
+    const r = runStopAndWait(errR, nFrames);
+    c.innerHTML = renderARQBlock(r,'#fff8e1');
+    addLog('Stop-and-Wait: eff='+r.efficiency,'success');
+  } else if (proto === 'gbn') {
+    const r = runGoBackN(winSz, errR, nFrames);
+    c.innerHTML = renderARQBlock(r,'#f0f8ff');
+    addLog('Go-Back-N: W='+winSz+', eff='+r.efficiency,'success');
+  } else if (proto === 'sr') {
+    const r = runSelectiveRepeat(winSz, errR, nFrames);
+    c.innerHTML = renderARQBlock(r,'#f1f8e9');
+    addLog('Selective Repeat: W='+winSz+', eff='+r.efficiency,'success');
+  } else {
+    const saw = runStopAndWait(errR, nFrames);
+    const gbn = runGoBackN(winSz, errR, nFrames);
+    const sr  = runSelectiveRepeat(winSz, errR, nFrames);
+    c.innerHTML = renderARQComparison(saw, gbn, sr);
+    addLog('All ARQ compared: SAW='+saw.efficiency+' GBN='+gbn.efficiency+' SR='+sr.efficiency,'success');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROTOCOL SIMULATIONS (pure JS)
+// ═══════════════════════════════════════════════════════
+function runCRC(data) {
+  const gen = "10011";
+  const bits = data.split('').map(c=>c.charCodeAt(0).toString(2).padStart(8,'0')).join('');
+  const appended = bits + "0000";
+  let rem = appended.slice(0, gen.length), i = gen.length;
+  while (i <= appended.length) {
+    if (rem[0]==='1') { let r=''; for(let j=1;j<gen.length;j++) r+=rem[j]===gen[j]?'0':'1'; rem=r; }
+    else { rem=rem.slice(1); }
+    if (i<appended.length) rem+=appended[i]; i++;
+  }
+  while(rem.length<gen.length-1) rem='0'+rem;
+  rem=rem.slice(-(gen.length-1));
+  return {valid:true, remainder:rem, generator:gen, codeword:bits+rem};
+}
+
+function runChecksum(data) {
+  const bytes = data.split('').map(c => c.charCodeAt(0) & 0xFF);
+  let sum = 0;
+  for (const b of bytes) sum = (sum + b) & 0xFF;
+  const checksum = (~sum) & 0xFF;
+  return { valid: true, value: checksum.toString(16).toUpperCase().padStart(2, '0') };
+}
+
+function runParity(data) {
+  const bits = data.split('').map(c=>c.charCodeAt(0).toString(2).padStart(8,'0')).join('');
+  const ones = bits.split('').filter(b => b === '1').length;
+  return { valid: true, type: 'Even parity', bit: ones % 2 === 0 ? 0 : 1 };
+}
+
+function runALOHA() {
+  const attempts = 1 + Math.floor(Math.random() * 3);
+  const success = Math.random() > 0.25;
+  return { success, attempts };
+}
+
+function runCSMA() {
+  const channelBusy = Math.random() < 0.35;
+  const success = !channelBusy || Math.random() > 0.2;
+  return { success, channelBusy };
+}
+
+function runCSMACD(deviceId) {
+  const steps=[]; let attempts=0, busy=Math.random()<0.5;
+  while(attempts<6){
+    if(busy){ steps.push({type:'col',label:'BUSY',msg:'Channel busy, waiting (try '+(attempts+1)+')'}); busy=Math.random()<0.3; attempts++; continue; }
+    const collision=Math.random()<(0.3/(attempts+1));
+    if(collision){
+      const backoff=Math.floor(Math.random()*Math.pow(2,Math.min(attempts+1,10)));
+      steps.push({type:'col',label:'COLLISION',msg:'Collision! Backoff='+backoff+' slots'}); attempts++;
+    } else {
+      steps.push({type:'ok',label:'SUCCESS',msg:'Frame sent successfully'});
+      return {success:true, attempts:attempts+1, steps};
+    }
+  }
+  return {success:false, attempts, steps:[...steps,{type:'col',label:'FAIL',msg:'Max retries'}]};
+}
+
+function runCSMACA() {
+  const backoff = Math.floor(Math.random() * 8);
+  const success = Math.random() > 0.2;
+  return { success, backoff };
+}
+
+/* ── Stop-and-Wait ARQ ── */
+function runStopAndWait(errorRate, totalFrames) {
+  const events=[]; let tx=0, retx=0, i=0;
+  while(i<totalFrames){
+    const err=Math.random()<errorRate; tx++;
+    if(err){
+      events.push({type:'nak',seq:i,label:'TIMEOUT',msg:'Frame '+i+' lost — retransmit'});
+      retx++;
+    } else {
+      events.push({type:'send',seq:i,label:'SEND',msg:'Sent frame '+i+' [W=1]'});
+      events.push({type:'ack',seq:i,label:'ACK',msg:'ACK '+i+' — next frame'});
+      i++;
+    }
+  }
+  return {protocol:'Stop-and-Wait ARQ',window:1,total:totalFrames,tx,retx,efficiency:Math.round((totalFrames/tx)*100)+'%',events};
+}
+
+/* ── Go-Back-N ARQ ── */
+function runGoBackN(windowSize, errorRate, totalFrames) {
+  const events=[]; let base=0,next=0,tx=0,retx=0;
+  while(base<totalFrames){
+    while(next<totalFrames && next<base+windowSize){
+      const err=Math.random()<errorRate;
+      events.push({type:err?'nak':'send',seq:next,label:err?'ERROR':'SEND',msg:err?'Frame '+next+' error':'Sent frame '+next+' [W='+windowSize+']'}); tx++; next++;
+    }
+    let ack=base, goBack=false;
+    while(ack<next && !goBack){
+      if(Math.random()<errorRate){
+        events.push({type:'nak',seq:ack,label:'GO-BACK',msg:'NAK '+ack+' — retransmit from '+ack});
+        retx+=(next-ack); tx+=(next-ack); next=ack; goBack=true;
+      } else {
+        events.push({type:'ack',seq:ack,label:'ACK',msg:'ACK '+ack+' — window slides'}); base++; ack++;
+      }
+    }
+  }
+  return {protocol:'Go-Back-N ARQ',window:windowSize,total:totalFrames,tx,retx,efficiency:Math.round((totalFrames/tx)*100)+'%',events};
+}
+
+/* ── Selective Repeat ARQ ── */
+function runSelectiveRepeat(windowSize, errorRate, totalFrames) {
+  const events=[]; let tx=0, retx=0;
+  const acked=Array(totalFrames).fill(false);
+  let base=0, next=0;
+  while(base<totalFrames){
+    while(next<totalFrames && next<base+windowSize){
+      const err=Math.random()<errorRate;
+      events.push({type:err?'nak':'send',seq:next,label:err?'ERROR':'SEND',msg:err?'Frame '+next+' lost':'Sent frame '+next+' [W='+windowSize+']'});
+      tx++; if(!err) acked[next]=true; next++;
+    }
+    for(let seq=base; seq<Math.min(base+windowSize,totalFrames); seq++){
+      if(!acked[seq]){
+        events.push({type:'nak',seq,label:'SELECTIVE',msg:'Retransmit ONLY frame '+seq});
+        retx++; tx++; acked[seq]=true;
+        events.push({type:'ack',seq,label:'ACK',msg:'ACK '+seq+' after selective retransmit'});
+      } else {
+        events.push({type:'ack',seq,label:'ACK',msg:'ACK '+seq+' — window slides'});
+      }
+    }
+    while(base<totalFrames && acked[base]) base++;
+    if(next<base) next=base;
+  }
+  return {protocol:'Selective Repeat ARQ',window:windowSize,total:totalFrames,tx,retx,efficiency:Math.round((totalFrames/tx)*100)+'%',events};
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDERING
+// ═══════════════════════════════════════════════════════
+function renderProtocols(errorSet, accessSet, selectedErr, selectedAcc, saw, gbn, sr, src, dst, msg, srcDev, dstDev, path, delivery, hubNode, swNode, switchFlood) {
+  document.getElementById('proto-empty').style.display='none';
+  const c = document.getElementById('proto-content');
+  const bits = msg.split('').map(ch=>ch.charCodeAt(0).toString(2).padStart(8,'0')).join('').substr(0,40)+'...';
+  const pathStr = path.join(' → ');
+
+  // Delivery table
+  let deliveryHTML = '';
+  if (hubNode) {
+    deliveryHTML = `
+      <div class="res-block" style="background:#fff8dc;">
+        <div class="res-title">🔊 Hub Broadcast Delivery</div>
+        <div class="kv"><span class="kv-k">Hub Device</span><span class="kv-v">${hubNode}</span></div>
+        <div class="kv"><span class="kv-k">Sender</span><span class="kv-v">${src}</span></div>
+        <table class="delivery-table"><thead><tr><th>Target Device</th><th>Delivered</th></tr></thead><tbody>
+        ${Object.entries(delivery).map(([id,ok])=>`<tr><td>${id}</td><td class="${ok?'yes':'no'}">${ok?'✓ YES':'✗ NO'}</td></tr>`).join('')}
+        </tbody></table>
+        <div style="font-size:12px;color:#555;">Hub = 1 shared collision domain. Frame is automatically broadcast to all devices.</div>
+      </div>`;
+  } else {
+    const ok = delivery[dst];
+    deliveryHTML = `
+      <div class="res-block">
+        <div class="res-title">${swNode?(switchFlood?'🔀 Switch Flooding (First Frame)':'🔀 Switch Unicast (After Learning)'):'⟶ P2P'} Delivery</div>
+        <div class="kv"><span class="kv-k">From</span><span class="kv-v">${src}</span></div>
+        <div class="kv"><span class="kv-k">To</span><span class="kv-v">${dst}</span></div>
+        <div class="kv"><span class="kv-k">Status</span><span class="kv-v ok">✓ Delivered</span></div>
+        ${swNode?`<div style="font-size:12px;color:#555;margin-top:4px;">${switchFlood?'Unknown MAC: switch floods first, then learns and uses unicast for next frames.':'Known MAC: switch forwards unicast only to '+dst+'.'}</div>`:''}
+      </div>`;
+  }
+
+  c.innerHTML = `
+    ${deliveryHTML}
+    <div class="res-block">
+      <div class="res-title">Data Link Layer Frame</div>
+      <div class="kv"><span class="kv-k">Path</span><span class="kv-v" style="font-size:12px;">${pathStr}</span></div>
+      <div class="kv"><span class="kv-k">Source MAC</span><span class="kv-v">${srcDev.mac}</span></div>
+      <div class="kv"><span class="kv-k">Dest MAC</span><span class="kv-v">${hubNode?'FF:FF:FF:FF:FF:FF (broadcast)':dstDev.mac}</span></div>
+      <div class="kv"><span class="kv-k">Payload</span><span class="kv-v">${msg}</span></div>
+      <div class="kv"><span class="kv-k">Bits (first 40)</span><span class="kv-v" style="font-size:10px;">${bits}</span></div>
+    </div>
+    <div class="res-block">
+      <div class="res-title">Error Control (Selected: ${selectedErr.toUpperCase()})</div>
+      ${(selectedErr==='all' || selectedErr==='crc') ? `
+      <div class="kv"><span class="kv-k">CRC Generator</span><span class="kv-v">${errorSet.crc.generator}</span></div>
+      <div class="kv"><span class="kv-k">CRC Remainder</span><span class="kv-v">${errorSet.crc.remainder}</span></div>
+      <div class="kv"><span class="kv-k">CRC Status</span><span class="kv-v ${errorSet.crc.valid?'ok':'bad'}">${errorSet.crc.valid?'VALID':'ERROR'}</span></div>
+      `:''}
+      ${(selectedErr==='all' || selectedErr==='checksum') ? `
+      <div class="kv"><span class="kv-k">Checksum (8-bit 1's complement)</span><span class="kv-v">${errorSet.checksum.value}</span></div>
+      <div class="kv"><span class="kv-k">Checksum Status</span><span class="kv-v ${errorSet.checksum.valid?'ok':'bad'}">${errorSet.checksum.valid?'VALID':'ERROR'}</span></div>
+      `:''}
+      ${(selectedErr==='all' || selectedErr==='parity') ? `
+      <div class="kv"><span class="kv-k">Parity Type</span><span class="kv-v">${errorSet.parity.type}</span></div>
+      <div class="kv"><span class="kv-k">Parity Bit</span><span class="kv-v">${errorSet.parity.bit}</span></div>
+      <div class="kv"><span class="kv-k">Parity Status</span><span class="kv-v ${errorSet.parity.valid?'ok':'bad'}">${errorSet.parity.valid?'VALID':'ERROR'}</span></div>
+      `:''}
+    </div>
+    <div class="res-block">
+      <div class="res-title">Access Control (Selected: ${selectedAcc.toUpperCase()})</div>
+      ${(selectedAcc==='all' || selectedAcc==='aloha') ? `<div class="kv"><span class="kv-k">ALOHA</span><span class="kv-v ${accessSet.aloha.success?'ok':'bad'}">${accessSet.aloha.success?'SUCCESS':'RETRY'} (attempts: ${accessSet.aloha.attempts})</span></div>` : ''}
+      ${(selectedAcc==='all' || selectedAcc==='csma') ? `<div class="kv"><span class="kv-k">CSMA</span><span class="kv-v ${accessSet.csma.success?'ok':'bad'}">${accessSet.csma.success?'SUCCESS':'BUSY/DEFER'}${accessSet.csma.channelBusy?' (channel busy)':''}</span></div>` : ''}
+      ${(selectedAcc==='all' || selectedAcc==='csmacd') ? `<div class="kv"><span class="kv-k">CSMA/CD</span><span class="kv-v ${accessSet.csmaCd.success?'ok':'bad'}">${accessSet.csmaCd.success?'SUCCESS':'COLLISION/RETRY'} (attempts: ${accessSet.csmaCd.attempts})</span></div>` : ''}
+      ${(selectedAcc==='all' || selectedAcc==='csmaca') ? `<div class="kv"><span class="kv-k">CSMA/CA</span><span class="kv-v ${accessSet.csmaCa.success?'ok':'bad'}">${accessSet.csmaCa.success?'SUCCESS':'BACKOFF'} (backoff: ${accessSet.csmaCa.backoff})</span></div>` : ''}
+      <div style="margin-top:5px;border-top:1px dotted #ccc;padding-top:4px;max-height:100px;overflow-y:auto;">
+        ${(selectedAcc==='all' || selectedAcc==='csmacd')
+          ? accessSet.csmaCd.steps.map(s=>`<div class="proto-ev"><span class="ev-tag ${s.type==='ok'?'tag-green':'tag-yellow'}">[${s.label}]</span>${s.msg}</div>`).join('')
+          : '<div class="proto-ev"><span class="ev-tag tag-blue">[INFO]</span>CSMA/CD step-by-step log is shown when CSMA/CD or All is selected.</div>'}
+      </div>
+    </div>
+    <div class="res-block" style="background:#f7fbff;">
+      <div class="res-title">Layer-Wise Protocol Mapping (Click a layer to open details)</div>
+      <details open>
+        <summary><b>Physical Layer</b></summary>
+        <table>
+          <thead><tr><th>Area</th><th>Protocols / Functions</th></tr></thead>
+          <tbody>
+            <tr><td>Signaling</td><td>Bit transmission, media, encoding basics</td></tr>
+            <tr><td>Media</td><td>Wired link in this simulator</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <details open>
+        <summary><b>Data Link Layer</b></summary>
+        <table>
+          <thead><tr><th>Area</th><th>Protocols / Functions</th></tr></thead>
+          <tbody>
+            <tr><td>Framing / Addressing</td><td>Ethernet frame, source/destination MAC</td></tr>
+            <tr><td>Switching / Forwarding</td><td>Hub broadcast, Switch first flooding then unicast after MAC learning</td></tr>
+            <tr><td>Access Control</td><td>ALOHA, CSMA, CSMA/CD, CSMA/CA</td></tr>
+            <tr><td>Error Control</td><td>CRC, Checksum, Parity</td></tr>
+            <tr><td>Flow Control</td><td>Stop-and-Wait ARQ, Go-Back-N ARQ, Selective Repeat ARQ</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <details>
+        <summary><b>Network Layer</b></summary>
+        <table>
+          <thead><tr><th>Area</th><th>Protocols (common)</th></tr></thead>
+          <tbody>
+            <tr><td>Logical addressing</td><td>IPv4/IPv6</td></tr>
+            <tr><td>Control / diagnostics</td><td>ICMP</td></tr>
+            <tr><td>Routing</td><td>RIP, OSPF, BGP</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <details>
+        <summary><b>Transport Layer</b></summary>
+        <table>
+          <thead><tr><th>Area</th><th>Protocols</th></tr></thead>
+          <tbody>
+            <tr><td>Reliable transport</td><td>TCP</td></tr>
+            <tr><td>Best-effort transport</td><td>UDP</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <details>
+        <summary><b>Session/Presentation/Application Layers</b></summary>
+        <table>
+          <thead><tr><th>Layer</th><th>Protocols (common)</th></tr></thead>
+          <tbody>
+            <tr><td>Application</td><td>HTTP, HTTPS, DNS, FTP, SMTP, POP3, IMAP, DHCP, SNMP, SSH</td></tr>
+            <tr><td>Presentation</td><td>TLS/SSL, data format and encryption concepts</td></tr>
+            <tr><td>Session</td><td>Session setup/teardown concepts (app/session management)</td></tr>
+          </tbody>
+        </table>
+      </details>
+    </div>
+    <div class="res-block" style="background:#fffde7;">
+      <div class="res-title">Flow Control — All Three ARQ Protocols</div>
+      <div class="arq-tabs">
+        <div class="arq-tab active" onclick="switchARQTab('saw',this)">Stop-and-Wait</div>
+        <div class="arq-tab" onclick="switchARQTab('gbn',this)">Go-Back-N</div>
+        <div class="arq-tab" onclick="switchARQTab('sr',this)">Selective Repeat</div>
+      </div>
+      <div id="arq-saw" class="arq-pane active">${renderARQBody(saw)}</div>
+      <div id="arq-gbn" class="arq-pane">${renderARQBody(gbn)}</div>
+      <div id="arq-sr"  class="arq-pane">${renderARQBody(sr)}</div>
+    </div>`;
+}
+
+function switchARQTab(id, el) {
+  document.querySelectorAll('.arq-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.arq-pane').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('arq-'+id).classList.add('active');
+}
+
+function renderARQBody(r) {
+  return `
+    <div class="kv"><span class="kv-k">Protocol</span><span class="kv-v">${r.protocol}</span></div>
+    <div class="kv"><span class="kv-k">Window Size</span><span class="kv-v">${r.window}</span></div>
+    <div class="kv"><span class="kv-k">Total Frames</span><span class="kv-v">${r.total}</span></div>
+    <div class="kv"><span class="kv-k">Transmissions</span><span class="kv-v">${r.tx}</span></div>
+    <div class="kv"><span class="kv-k">Retransmissions</span><span class="kv-v" style="color:red;">${r.retx}</span></div>
+    <div class="kv"><span class="kv-k">Efficiency</span><span class="kv-v ok">${r.efficiency}</span></div>
+    <div style="margin-top:5px;border-top:1px dotted #ccc;padding-top:4px;max-height:140px;overflow-y:auto;">
+      ${r.events.map(e=>`<div class="proto-ev"><span class="ev-tag ${e.type==='ack'?'tag-green':e.type==='send'?'tag-blue':'tag-red'}">[${e.label}]</span>${e.msg}</div>`).join('')}
+    </div>`;
+}
+
+function renderARQBlock(r, bg) {
+  return `<div class="res-block" style="background:${bg};">
+    <div class="res-title">Flow Control — ${r.protocol}</div>${renderARQBody(r)}</div>`;
+}
+
+function renderARQComparison(saw, gbn, sr) {
+  return `
+    <div class="res-block">
+      <div class="res-title">ARQ Protocol Comparison</div>
+      <table><thead><tr><th>Protocol</th><th>Window</th><th>Tx</th><th>Retx</th><th>Efficiency</th></tr></thead>
+      <tbody>
+        <tr><td>Stop-and-Wait</td><td>${saw.window}</td><td>${saw.tx}</td><td>${saw.retx}</td><td><b>${saw.efficiency}</b></td></tr>
+        <tr><td>Go-Back-N</td><td>${gbn.window}</td><td>${gbn.tx}</td><td>${gbn.retx}</td><td><b>${gbn.efficiency}</b></td></tr>
+        <tr><td>Selective Repeat</td><td>${sr.window}</td><td>${sr.tx}</td><td>${sr.retx}</td><td><b style="color:green;">${sr.efficiency}</b></td></tr>
+      </tbody></table>
+    </div>
+    <div class="arq-tabs">
+      <div class="arq-tab active" onclick="switchARQTab('saw2',this)">Stop-and-Wait</div>
+      <div class="arq-tab" onclick="switchARQTab('gbn2',this)">Go-Back-N</div>
+      <div class="arq-tab" onclick="switchARQTab('sr2',this)">Selective Repeat</div>
+    </div>
+    <div id="arq-saw2" class="arq-pane active">${renderARQBody(saw)}</div>
+    <div id="arq-gbn2" class="arq-pane">${renderARQBody(gbn)}</div>
+    <div id="arq-sr2"  class="arq-pane">${renderARQBody(sr)}</div>`;
+}
+
+function renderMACTable() {
+  const keys = Object.keys(macTables);
+  if (!keys.length) return;
+  document.getElementById('mac-empty').style.display='none';
+  let html='';
+  keys.forEach(sw => {
+    html+=`<div style="font-weight:bold;margin-top:8px;">Switch: ${sw}</div>`;
+    html+=`<table><thead><tr><th>MAC Address</th><th>Port / Device</th></tr></thead><tbody>`;
+    Object.entries(macTables[sw]).forEach(([mac,dev])=>{ html+=`<tr><td>${mac}</td><td>${dev}</td></tr>`; });
+    html+='</tbody></table>';
+  });
+  document.getElementById('mac-content').innerHTML=html;
+}
+
+function updateStats() {
+  const devList=Object.values(devices);
+  const hosts  =devList.filter(d=>d.type==='host').length;
+  const hubs   =devList.filter(d=>d.type==='hub').length;
+  const switches=devList.filter(d=>d.type==='switch').length;
+  const links  =cy?cy.edges().length:0;
+  let cd=hubs;
+  Object.entries(devices).forEach(([id,d])=>{ if(d.type==='switch') cd+=d.connections.length; });
+  if(cd===0 && devList.length>0) cd=1;
+  document.getElementById('st-cd').textContent=cd;
+  document.getElementById('st-bd').textContent=1;
+  document.getElementById('st-hosts').textContent=hosts;
+  document.getElementById('st-links').textContent=links;
+  document.getElementById('stats-detail').innerHTML=`
+    <div class="res-block" style="margin-top:8px;">
+      <div class="res-title">Network Summary</div>
+      <div class="kv"><span class="kv-k">Total Devices</span><span class="kv-v">${devList.length}</span></div>
+      <div class="kv"><span class="kv-k">Hosts</span><span class="kv-v">${hosts}</span></div>
+      <div class="kv"><span class="kv-k">Hubs</span><span class="kv-v">${hubs}</span></div>
+      <div class="kv"><span class="kv-k">Switches</span><span class="kv-v">${switches}</span></div>
+      <div class="kv"><span class="kv-k">Links</span><span class="kv-v">${links}</span></div>
+      <div class="kv"><span class="kv-k">Collision Domains</span><span class="kv-v ok">${cd}</span></div>
+      <div class="kv"><span class="kv-k">Broadcast Domains</span><span class="kv-v ok">1</span></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function genMAC() {
+  return Array.from({length:6},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join(':');
+}
+
+function getSpreadPos(type) {
+  if (!cy) return {x:300,y:300};
+  const w=cy.width()||700, h=cy.height()||400, cx=w/2, cy2=h/2;
+  const isInfra=type==='hub'||type==='switch'||type==='bridge';
+  const count=cy.nodes().length, angle=(count*1.2)%(2*Math.PI);
+  const r=isInfra?80:Math.max(180,40+count*20);
+  return {x:cx+r*Math.cos(angle), y:cy2+r*Math.sin(angle)};
+}
+
+function relayout() {
+  if (!cy||cy.nodes().length===0) return;
+  const infra=cy.nodes().filter(n=>n.data('type')!=='host');
+  const hosts=cy.nodes().filter(n=>n.data('type')==='host');
+  const cx=cy.width()/2, cy2=cy.height()/2;
+  infra.forEach((n,i)=>{
+    const angle=(i/Math.max(infra.length,1))*2*Math.PI;
+    const r=infra.length>1?110:0;
+    n.position({x:cx+r*Math.cos(angle),y:cy2+r*Math.sin(angle)});
+  });
+  hosts.forEach((n,i)=>{
+    const angle=(i/Math.max(hosts.length,1))*2*Math.PI-Math.PI/2;
+    const r=Math.max(190,hosts.length*30);
+    n.position({x:cx+r*Math.cos(angle),y:cy2+r*Math.sin(angle)});
+  });
+  cy.fit(cy.elements(),50);
+}
+
+function resetAll() {
+  cy.elements().remove();
+  devices={}; macTables={}; linkCount=0;
+  document.getElementById('log-entries').innerHTML='';
+  document.getElementById('log-empty').style.display='block';
+  document.getElementById('proto-content').innerHTML='';
+  document.getElementById('proto-empty').style.display='block';
+  document.getElementById('mac-content').innerHTML='';
+  document.getElementById('mac-empty').style.display='block';
+  updateStats(); addLog('Reset completed','info');
+}
+
+function addLog(msg, type='info') {
+  document.getElementById('log-empty').style.display='none';
+  const d=document.createElement('div'); d.className='log-entry '+type;
+  const now=new Date();
+  const t=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+  d.innerHTML=`<span class="log-time">[${t}]</span><span>${msg}</span>`;
+  const c=document.getElementById('log-entries'); c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+
+function showTab(name) {
+  const names=['log','stats','mac','proto'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
+  document.querySelectorAll('.pane').forEach((p,i)=>p.classList.toggle('active',names[i]===name));
+}
+
+window.onload = () => {
+  initCy();
+  addLog('Simulator initialized.','success');
+  addLog('Try "Star via Hub" → Send Frame to see hub broadcast to all PCs.','info');
+};
+</script>
+</body>
+</html>
